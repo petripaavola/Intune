@@ -15,7 +15,7 @@ Get-DeviceManagement_ManagedDevices | Select deviceName, userDisplayName, userPr
 $url = "https://graph.microsoft.com/beta/deviceAppManagement/mobileApps?$filter=(microsoft.graph.managedApp/appAvailability%20eq%20null%20or%20microsoft.graph.managedApp/appAvailability%20eq%20%27lineOfBusiness%27%20or%20isAssigned%20eq%20true)&$orderby=displayName&&_=1571905984828"
 $ManagedApps = Invoke-MSGraphRequest -Url $url -HttpMethod 'GET'
 $AllManagedApps = Get-MSGraphAllPages -SearchResult $ManagedApps
-$AllManagedApps | Select -Property * -ExcludeProperty description | Out-GridView -Title "Intune Applications"
+$AllManagedApps | Select -Property '@odata.type',vppTokenAppleId,*,msiInformation,setupFilePath,installCommandLine,uninstallCommandLine,applicableArchitectures,minimumFreeDiskSpaceInMB,minimumMemoryInMB,minimumNumberOfProcessors,minimumCpuSpeedInMHz,installExperience,vppTokenOrganizationName,vppTokenAccountType -ExcludeProperty description -ErrorAction SilentlyContinue | Out-GridView -Title "Intune Applications"
 
 ```
 
