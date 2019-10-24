@@ -49,6 +49,22 @@ $device.deviceName
 $device.wiFiMacAddress
 
 
+# Run actions on devices
+
+# Find device by name and Sync Intune policies
+$deviceName = 'HPZBOOKSTUDIO'
+Get-DeviceManagement_ManagedDevices -Filter "deviceName eq '$deviceName'" | Invoke-DeviceManagement_ManagedDevices_SyncDevice
+Write-Output "Sync action succeeded: $?"
+
+# Find device by name and Reboot computer
+$deviceName = 'ComputerName'
+Get-DeviceManagement_ManagedDevices -Filter "deviceName eq '$deviceName'" | Invoke-DeviceManagement_ManagedDevices_RebootNow
+Write-Output "Sync action succeeded: $?"
+
+# Show list of all device actions available
+Get-Command Invoke-DeviceManagement_ManagedDevices* | Select Name
+
+
 # Measure how long query takes time. Filtering on Get-request is quicker
 Measure-Command { Get-DeviceManagement_ManagedDevices -Filter "deviceName eq 'HPZBOOKSTUDIO'" }
 Measure-Command { Get-DeviceManagement_ManagedDevices | Where { $_.deviceName -eq 'HPZBOOKSTUDIO' } }
