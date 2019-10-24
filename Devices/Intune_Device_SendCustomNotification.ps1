@@ -1,9 +1,10 @@
 # Send Custom Notification to Intune Device
 #
+# Example:
 # .\Intune_Device_SendCustomNotification.ps1 -id 034edbcd-a295-4124-829a-e15b50bd003a -MessageTitle "Important message!" -MessageBody "Hello World!"
 #
 # You can pass device object in pipeline. id is used automatically
-# Example: Get-DeviceManagement_ManagedDevices -Filter "deviceName eq 'etunimi.sukunimi_AndroidForWork_9/19/2019_12:10 PM'" | .\Intune_Device_SendCustomNotification.ps1 -MessageTitle "Important message!" -MessageBody "Hello World!"
+# Get-DeviceManagement_ManagedDevices -Filter "deviceName eq 'etunimi.sukunimi_AndroidForWork_9/19/2019_12:10 PM'" | .\Intune_Device_SendCustomNotification.ps1 -MessageTitle "Important message!" -MessageBody "Hello World!"
 #
 # TODO: Proper processing if multiple deviceObjects are passed from pipeline
 #
