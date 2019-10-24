@@ -89,12 +89,15 @@ https://graph.microsoft.com/beta/deviceManagement/managedDevices('034edbcd-a295-
 # Intune Apps
 
 # Get Apps - notice we don't get Win32LobApps (intunewin) because we are using v1.0 schema
+GET
 https://graph.microsoft.com/v1.0/deviceAppManagement/mobileApps
 
 # Get Apps using beta schema to get Win32LobApps also (intunewin)
+GET
 https://graph.microsoft.com/beta/deviceAppManagement/mobileApps
 
 # Normally we don't get App Assignments so we have to expand our query with expand to Assignments also
+GET
 https://graph.microsoft.com/beta/deviceAppManagement/mobileApps?$expand=assignments
 
 
@@ -103,6 +106,7 @@ https://graph.microsoft.com/beta/deviceAppManagement/mobileApps?$expand=assignme
 
 
 # Get Autopilot devices
+GET
 https://graph.microsoft.com/beta/deviceManagement/windowsAutopilotDeviceIdentities
 
 
