@@ -10,4 +10,4 @@ or with Powershell Cmdlet: **Invoke-MSGraphRequest -Url $url -HttpMethod 'GET'**
 * Graph API beta reference: https://docs.microsoft.com/en-us/graph/api/overview?toc=./ref/toc.json&view=graph-rest-beta
 * Managed Device docs: https://docs.microsoft.com/en-us/graph/api/intune-devices-manageddevice-get?view=graph-rest-beta
 
-Check urls from file [Microsoft Graph API urls.ps1](./Microsoft%20Graph%20API%20urls.ps1)
+Check urls from file [Microsoft Graph API urls.ps1](./Microsoft_Graph_API_urls.ps1)
