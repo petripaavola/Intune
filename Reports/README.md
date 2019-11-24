@@ -7,6 +7,7 @@ Reports which we don't have in Intune (at least at this time)
 2 views:
 * Find where Application is assigned to
 * Find what Apps are assigned to AzureAD Group
+
 Platform based tables and quick links
 
 ### Overview
