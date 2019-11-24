@@ -2,6 +2,8 @@
 Reports which we don't have in Intune (at least at this time)
 
 ## Create_IntuneMobileAppAssignments_HTML_Report.ps1
+[Create_IntuneMobileAppAssignments_HTML_Report.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create_IntuneMobileAppAssignments_HTML_Report.ps1)
+
 2 views:
 * Find where Application is assigned to
 * Find what Apps are assigned to AzureAD Group
