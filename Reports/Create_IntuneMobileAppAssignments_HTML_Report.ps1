@@ -150,14 +150,18 @@ function Change-HTMLTableSyntaxWithRegexpForAppsSortedByDisplayName {
 
         # Change intent cell background color
         $intent = $match.Groups[13].Value
-        switch ($intent) {
-            'required' { $IntentTD = "<td bgcolor=`"lightgreen`"><font color=`"black`">$intent</font></td>" }
-            'uninstall' { $IntentTD = "<td bgcolor=`"lightSalmon`"><font color=`"black`">$intent</font></td>" }
-            'available' { $IntentTD = "<td bgcolor=`"lightyellow`">$intent</td>" }
-            'availableWithoutEnrollment' { $IntentTD = "<td bgcolor=`"lightyellow`">$intent</td>" }
-            default { $IntentTD = "<td>$intent</td>" }
-        }      
 
+        # Set first letter to capital
+        $intent = (Get-Culture).TextInfo.ToTitleCase($intent.tolower())
+
+        # Set Default
+        $IntentTD = "<td>$intent</td>"
+
+        if ($intent -like "required*") { $IntentTD = "<td bgcolor=`"lightgreen`"><font color=`"black`">$intent</font></td>" }
+        if ($intent -like "uninstall*") { $IntentTD = "<td bgcolor=`"lightSalmon`"><font color=`"black`">$intent</font></td>" }
+        if ($intent -like "available*") { $IntentTD = "<td bgcolor=`"lightyellow`">$intent</td>" }
+        if ($intent -like "availableWithoutEnrollment*") { $IntentTD = "<td bgcolor=`"lightyellow`">$intent</td>" }
+        
         $RowColor = $match.Groups[3].Value
         $AppDisplayName = $match.Groups[10].Value
 
@@ -201,14 +205,18 @@ function Change-HTMLTableSyntaxWithRegexpForAppsSortedByAssignmentTargetGroupDis
        
         # Change intent cell background color
         $intent = $match.Groups[13].Value
-        switch ($intent) {
-            'required' { $IntentTD = "<td bgcolor=`"lightgreen`"><font color=`"black`">$intent</font></td>" }
-            'uninstall' { $IntentTD = "<td bgcolor=`"lightSalmon`"><font color=`"black`">$intent</font></td>" }
-            'available' { $IntentTD = "<td bgcolor=`"lightyellow`">$intent</td>" }
-            'availableWithoutEnrollment' { $IntentTD = "<td bgcolor=`"lightyellow`">$intent</td>" }
-            default { $IntentTD = "<td>$intent</td>" }
-        }
 
+        # Set first letter to capital
+        $intent = (Get-Culture).TextInfo.ToTitleCase($intent.tolower())
+
+        # Set Default
+        $IntentTD = "<td>$intent</td>"
+
+        if ($intent -like "required*") { $IntentTD = "<td bgcolor=`"lightgreen`"><font color=`"black`">$intent</font></td>" }
+        if ($intent -like "uninstall*") { $IntentTD = "<td bgcolor=`"lightSalmon`"><font color=`"black`">$intent</font></td>" }
+        if ($intent -like "available*") { $IntentTD = "<td bgcolor=`"lightyellow`">$intent</td>" }
+        if ($intent -like "availableWithoutEnrollment*") { $IntentTD = "<td bgcolor=`"lightyellow`">$intent</td>" }
+        
         $RowColor = $match.Groups[3].Value
         $AppDisplayName = $match.Groups[10].Value
         $assignmentTargetGroupDisplayName = $match.Groups[16].Value
@@ -456,12 +464,32 @@ try {
                 $assignmentId = $Assignment.id
                 $assignmentIntent = $Assignment.intent
                 $assignmentTargetGroupId = $Assignment.target.groupid
+                $assignmentTargetGroupDisplayName = $AllGroups | Where { $_.id -eq $assignmentTargetGroupId } | Select -ExpandProperty displayName
+                
+                # Special case for All Users
+                if ($Assignment.target.'@odata.type' -eq '#microsoft.graph.allLicensedUsersAssignmentTarget') {
+                    $assignmentTargetGroupDisplayName = 'All Users'
+                }
+
+                # Special case for All Devices
+                if ($Assignment.target.'@odata.type' -eq '#microsoft.graph.allDevicesAssignmentTarget') {
+                    $assignmentTargetGroupDisplayName = 'All Devices'
+                }
 
                 if ($App.licenseType -eq 'offline') {
                     $displayName = "$($App.displayname) (offline)"
                 }
                 else {
                     $displayName = "$($App.displayname)"
+                }
+
+                # Set included/excluded attribute
+                $AppIncludeExclude = ''
+                if ($Assignment.target.'@odata.type' -eq '#microsoft.graph.groupAssignmentTarget') {
+                    $AppIncludeExclude = 'Included'
+                }
+                if ($Assignment.target.'@odata.type' -eq '#microsoft.graph.exclusionGroupAssignmentTarget') {
+                    $AppIncludeExclude = 'Excluded'
                 }
 
                 # Remove #microsoft.graph. from @odata.type
@@ -478,9 +506,10 @@ try {
                     id                               = $App.id
                     licenseType                      = $App.licenseType
                     assignmentId                     = $assignmentId
-                    assignmentIntent                 = $assignmentIntent
+                    assignmentIntent                 = "$assignmentIntent $AppIncludeExclude"
                     assignmentTargetGroupId          = $assignmentTargetGroupId
-                    assignmentTargetGroupDisplayName = $AllGroups | Where { $_.id -eq $assignmentTargetGroupId } | Select -ExpandProperty displayName
+                    assignmentTargetGroupDisplayName = $assignmentTargetGroupDisplayName
+                    AppIncludeExclude                = $AppIncludeExclude
                     icon                             = ""
                     c                                = "D0E4F5"
                 }
@@ -601,7 +630,7 @@ try {
         }
     }
     $AppIconDownloadList = $null
-    
+
     ########################################################################################################################
 
     # Create HTML report
