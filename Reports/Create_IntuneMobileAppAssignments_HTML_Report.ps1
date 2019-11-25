@@ -437,99 +437,6 @@ try {
     }
 
     #####
-    # Get App Icons information from cache
-    $CacheIconFiles = $false
-    $CacheIconFiles = Get-ChildItem -File -Path "$PSScriptRoot\cache" -Include '*.jpg', '*.jpeg', '*.png' -Recurse | Select Name, FullName, BaseName, Extension, Length
-
-    # If we didn't find any .png or .jpg files in cache then show Y/N question to download them
-    if (-not ($CacheIconFiles)) {
-        Write-Host
-        Write-Host "We didn't find any cached Application icon files" -ForegroundColor 'Yellow'
-        Write-Host "Application icons makes Assingment report look better." -ForegroundColor 'Yellow'
-        Write-Host
-
-        $YesNoResponse = $null
-        do {
-            $YesNoResponse = Read-Host "Do you want to download Application icon files to local cache? (Y/N)" 
-        }
-        until(($YesNoResponse -like "y*") -or ($YesNoResponse -like "n*"))
-
-        if ($YesNoResponse -like 'y*') {
-            Write-Output "Enabling Application icon downloading to local cache..."
-            $DownloadAppIcons = $true           
-        }
-    }
-    else {
-        Write-Output "Found at least one App icon file from cache..."
-    }
-
-    foreach ($ManagedApp in $AllApps) {
-
-        #Write-Verbose "Processing App: $($ManagedApp.displayName)"
-
-        # Initialize variable
-        $LargeIconFullPathAndFileName = $null
-
-        if ($DownloadAppIcons) {
-            #Write-Output "Downloading App icon files to local cache from Graph API for App $($ManagedApp.displayName)"
-            
-            # Check if we have application icon already in cache folder
-            # Use existing icon if found
-            $IconFileObject = $null
-            $IconFileObject = $CacheIconFiles | Where-Object { $_.BaseName -eq $ManagedApp.id }
-            if ($IconFileObject) {
-                $LargeIconFullPathAndFileName = $IconFileObject.FullName
-                #Write-Verbose "Found icon file ($LargeIconFullPathAndFileName) for Application id $($ManagedApp.id)"
-                Write-Output "Found cached App icon for App $($ManagedApp.displayName)"
-            }
-            else {
-                try {
-                    # Try to download largeIcon-attribute from application and save file to cache folder
-                    Write-Output "Downloading icon for Application $($ManagedApp.displayName) (id:$($ManagedApp.id)"
-
-                    # Get application largeIcon attribute
-                    $AppId = $ManagedApp.id
-                    $url = "https://graph.microsoft.com/beta/deviceAppManagement/mobileApps/$($AppId)?`$select=largeIcon"
-
-                    $appLargeIcon = Invoke-MSGraphRequest -Url $url -HttpMethod GET
-
-                    #Write-Output "Invoke-MSGraphRequest succeeded: $?"
-
-                    #largeIcon      : @{type=image/png; value=iVBORw0KGg
-                    #$appLargeIcon.largeIcon.type
-
-                    if (($appLargeIcon.largeIcon.type -ne $null) -and ($appLargeIcon.largeIcon.value -ne $null)) {
-                        $filetype = ($appLargeIcon.largeIcon.type).Split('/')[1]
-                        $largeIconBase64 = $appLargeIcon.largeIcon.value
-                    }
-                    else {
-                        # There is no largeIcon attribute so we create empty file
-                        # We create empty file so we know next time that there was no icon in Graph API
-                        # This is workaround not to try find non-existing icons over and over again
-                        # To check if icon has been added to Intune requires manual deletion of all zero sized "icon" files and running this script
-                        $filetype = "png"
-                        $largeIconBase64 = ''
-                    }
-        
-                    $LargeIconFilename = "$($AppId).$($filetype)"
-                    $LargeIconFullPathAndFileName = "$PSScriptRoot\cache\$LargeIconFilename"
-                    
-                    try {
-                        $return = Convert-Base64ToFile $largeIconBase64 $LargeIconFullPathAndFileName
-                        Write-Verbose "Convert-Base64ToFile ApplicationId:$AppId $LargeIconFullPathAndFileName success: $return"
-                    }
-                    catch {
-                        Write-Host "Error converting Base64 to file. Continuing to next app..." -ForegroundColor "Red"
-                    }
-                }
-                catch {
-                    Write-Host "Error downloading icon for app: $($ManagedApp.displayName). Continuing to next application..." -ForegroundColor "Red"
-                }
-            }
-        }
-    }
-
-    #####
 
     # Find apps which have assignments
     # Check data syntax from GraphAPI with request: https://graph.microsoft.com/v1.0/deviceAppManagement/mobileApps?$expand=assignments
@@ -597,6 +504,104 @@ try {
         Exit 1
     }
 
+    #####
+    # Get App Icons information from cache
+    $CacheIconFiles = $false
+    $CacheIconFiles = Get-ChildItem -File -Path "$PSScriptRoot\cache" -Include '*.jpg', '*.jpeg', '*.png' -Recurse | Select Name, FullName, BaseName, Extension, Length
+
+    # If we didn't find any .png or .jpg files in cache then show Y/N question to download them
+    if ((-not ($CacheIconFiles)) -and ($DownloadAppIcons -eq $false)) {
+        Write-Host
+        Write-Host "We didn't find any cached Application icon files" -ForegroundColor 'Yellow'
+        Write-Host "Application icons makes Assingment report look better." -ForegroundColor 'Yellow'
+        Write-Host
+
+        $YesNoResponse = $null
+        do {
+            $YesNoResponse = Read-Host "Do you want to download Application icon files to local cache? (Y/N)" 
+        }
+        until(($YesNoResponse -like "y*") -or ($YesNoResponse -like "n*"))
+
+        if ($YesNoResponse -like 'y*') {
+            Write-Output "Enabling Application icon downloading to local cache..."
+            $DownloadAppIcons = $true           
+        }
+    }
+    else {
+        Write-Output "Found at least one App icon file from cache so we assume there are icons..."
+    }
+
+    # Create array of objects which have App.DisplayName and App.id
+    # Sort array and get unique to download icon only once
+    $AppIconDownloadList = $AppsWithAssignmentInformation | Select-Object -Property id,displayName | Sort-Object id -Unique
+
+    foreach ($ManagedApp in $AppIconDownloadList) {
+
+        #Write-Verbose "Processing App: $($ManagedApp.displayName)"
+
+        # Initialize variable
+        $LargeIconFullPathAndFileName = $null
+
+        if ($DownloadAppIcons) {
+            #Write-Output "Downloading App icon files to local cache from Graph API for App $($ManagedApp.displayName)"
+            
+            # Check if we have application icon already in cache folder
+            # Use existing icon if found
+            $IconFileObject = $null
+            $IconFileObject = $CacheIconFiles | Where-Object { $_.BaseName -eq $ManagedApp.id }
+            if ($IconFileObject) {
+                $LargeIconFullPathAndFileName = $IconFileObject.FullName
+                #Write-Verbose "Found icon file ($LargeIconFullPathAndFileName) for Application id $($ManagedApp.id)"
+                Write-Output "Found cached App icon for App $($ManagedApp.displayName)"
+            }
+            else {
+                try {
+                    # Try to download largeIcon-attribute from application and save file to cache folder
+                    Write-Output "Downloading icon for Application $($ManagedApp.displayName) (id:$($ManagedApp.id)"
+
+                    # Get application largeIcon attribute
+                    $AppId = $ManagedApp.id
+                    $url = "https://graph.microsoft.com/beta/deviceAppManagement/mobileApps/$($AppId)?`$select=largeIcon"
+
+                    $appLargeIcon = Invoke-MSGraphRequest -Url $url -HttpMethod GET
+
+                    #Write-Output "Invoke-MSGraphRequest succeeded: $?"
+
+                    #largeIcon      : @{type=image/png; value=iVBORw0KGg
+                    #$appLargeIcon.largeIcon.type
+
+                    if (($appLargeIcon.largeIcon.type -ne $null) -and ($appLargeIcon.largeIcon.value -ne $null)) {
+                        $filetype = ($appLargeIcon.largeIcon.type).Split('/')[1]
+                        $largeIconBase64 = $appLargeIcon.largeIcon.value
+                    }
+                    else {
+                        # There is no largeIcon attribute so we create empty file
+                        # We create empty file so we know next time that there was no icon in Graph API
+                        # This is workaround not to try find non-existing icons over and over again
+                        # To check if icon has been added to Intune requires manual deletion of all zero sized "icon" files and running this script
+                        $filetype = "png"
+                        $largeIconBase64 = ''
+                    }
+        
+                    $LargeIconFilename = "$($AppId).$($filetype)"
+                    $LargeIconFullPathAndFileName = "$PSScriptRoot\cache\$LargeIconFilename"
+                    
+                    try {
+                        $return = Convert-Base64ToFile $largeIconBase64 $LargeIconFullPathAndFileName
+                        Write-Verbose "Convert-Base64ToFile ApplicationId:$AppId $LargeIconFullPathAndFileName success: $return"
+                    }
+                    catch {
+                        Write-Host "Error converting Base64 to file. Continuing to next app..." -ForegroundColor "Red"
+                    }
+                }
+                catch {
+                    Write-Host "Error downloading icon for app: $($ManagedApp.displayName). Continuing to next application..." -ForegroundColor "Red"
+                }
+            }
+        }
+    }
+    $AppIconDownloadList = $null
+    
     ########################################################################################################################
 
     # Create HTML report
