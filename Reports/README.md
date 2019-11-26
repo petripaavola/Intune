@@ -1,6 +1,13 @@
 # Intune HTML reports
 Reports which we don't have in Intune (at least at this time)
 
+Make sure you have Intune Powershell Cmdlets installed and updated
+
+**Install-Module -Name Microsoft.Graph.Intune -Force**
+
+Check more tips on module management
+(https://github.com/petripaavola/Intune/blob/master/Powershell_Commands/Intune_Powershell_Commands_Examples.ps1)
+
 ## Create_IntuneMobileAppAssignments_HTML_Report.ps1
 [Create_IntuneMobileAppAssignments_HTML_Report.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create_IntuneMobileAppAssignments_HTML_Report.ps1)
 
