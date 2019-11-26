@@ -6,26 +6,38 @@
 # .\cache\AllGroups.json
 # .\cache\AllApps.json
 #
-# Download Application icons to local cache to get better looking report.
-# You can run this once and/or update icons periodically:
-# .\Create_IntuneMobileAppAssignments_HTML_Report.ps1 -DownloadAppIcons $true
+# Downloads also Application icons to local cache to get better looking report.
+# You can run this once and/or update icons periodically if there were changes in Intune for existing Apps
+# New Apps will always get icons downloaded automatically
+# .\Create_IntuneMobileAppAssignments_HTML_Report.ps1 -UpdateIconsCache
 #
 # You can work with cached data without network connection with command
-# .\Create_IntuneMobileAppAssignments_HTML_Report.ps1 -UseOfflineCache $true
+# .\Create_IntuneMobileAppAssignments_HTML_Report.ps1 -UseOfflineCache
+#
+# You can include images in HTML page in base64 format
+# This creates HUGE file sizes so use at your own risk
+# .\Create_IntuneMobileAppAssignments_HTML_Report.ps1 -IncludeBase64ImagesInReport
 #
 # Petri.Paavola@yodamiitti.fi
 # Microsoft MVP
-# 20191124
+# 20191126
 #
 # https://github.com/petripaavola/Intune
 
 Param(
-    $UseOfflineCache = $false,
-    $DownloadAppIcons = $false,
-    $IncludeIdsInReport = $false
+    [Switch]$UseOfflineCache,
+    [Switch]$UpdateIconsCache,
+    [Switch]$DoNotDownloadAppIcons,
+    [Switch]$IncludeIdsInReport,
+    [Switch]$IncludeBase64ImagesInReport
 )
 
-$ScriptVersion = "ver 1.1"
+# Do not download App Icons if we specify to use cached files
+if ($UseOfflineCache) {
+    $DoNotDownloadAppIcons = $true
+}
+
+$ScriptVersion = "ver 1.4"
 
 
 function Verify-IntuneModuleExistence {
@@ -321,9 +333,12 @@ try {
     # Get AzureADGroups. This should be more efficient than getting AzureADGroup for every assignment one by one
 
     # Test if we have AllGroups.json file
-    if (-not ("$PSScriptRoot\cache\AllGroups.json")) {
+    if (-not (Test-Path "$PSScriptRoot\cache\AllGroups.json")) {
         Write-Output "Did NOT find AllGroups.json file. We have to get AzureAD Group information from Graph API"
-        $UseOfflineCache = $false
+        if ($UseOfflineCache) {
+            Write-Host "Run script without option -UseOfflineCache to download necessary AllGroups information`n" -ForegroundColor "Yellow"
+            Exit 0
+        }
     }
 
     try {
@@ -382,9 +397,12 @@ try {
 
     ######
     # Test if we have AllGroups.json file
-    if (-not ("$PSScriptRoot\cache\AllApps.json")) {
+    if (-not (Test-Path "$PSScriptRoot\cache\AllApps.json")) {
         Write-Output "Could NOT find AllApps.json file. We have to get Apps information from Graph API"
-        $UseOfflineCache = $false
+        if ($UseOfflineCache) {
+            Write-Host "Run script without option -UseOfflineCache to download necessary AllApps information`n" -ForegroundColor "Yellow"
+            Exit 0
+        }
     }
 
     try {
@@ -535,53 +553,36 @@ try {
 
     #####
     # Get App Icons information from cache
-    $CacheIconFiles = $false
-    $CacheIconFiles = Get-ChildItem -File -Path "$PSScriptRoot\cache" -Include '*.jpg', '*.jpeg', '*.png' -Recurse | Select Name, FullName, BaseName, Extension, Length
 
-    # If we didn't find any .png or .jpg files in cache then show Y/N question to download them
-    if ((-not ($CacheIconFiles)) -and ($DownloadAppIcons -eq $false)) {
-        Write-Host
-        Write-Host "We didn't find any cached Application icon files" -ForegroundColor 'Yellow'
-        Write-Host "Application icons makes Assingment report look better." -ForegroundColor 'Yellow'
-        Write-Host
+    # Left option to NOT to download App Icons
+    # Why would anyone would not to have good looking report ?-)
+    if ((-not ($DoNotDownloadAppIcons))) {
 
-        $YesNoResponse = $null
-        do {
-            $YesNoResponse = Read-Host "Do you want to download Application icon files to local cache? (Y/N)" 
-        }
-        until(($YesNoResponse -like "y*") -or ($YesNoResponse -like "n*"))
+        $CacheIconFiles = $false
+        $CacheIconFiles = Get-ChildItem -File -Path "$PSScriptRoot\cache" -Include '*.jpg', '*.jpeg', '*.png' -Recurse | Select Name, FullName, BaseName, Extension, Length
 
-        if ($YesNoResponse -like 'y*') {
-            Write-Output "Enabling Application icon downloading to local cache..."
-            $DownloadAppIcons = $true           
-        }
-    }
-    else {
-        Write-Output "Found at least one App icon file from cache so we assume there are icons..."
-    }
+        # Create array of objects which have App.DisplayName and App.id
+        # Sort array and get unique to download icon only once per application (id)
+        $AppIconDownloadList = $AppsWithAssignmentInformation | Select-Object -Property id, displayName | Sort-Object id -Unique
 
-    # Create array of objects which have App.DisplayName and App.id
-    # Sort array and get unique to download icon only once
-    $AppIconDownloadList = $AppsWithAssignmentInformation | Select-Object -Property id,displayName | Sort-Object id -Unique
+        Write-Host "Checking if we need to download App Icons..."
+        foreach ($ManagedApp in $AppIconDownloadList) {
 
-    foreach ($ManagedApp in $AppIconDownloadList) {
+            #Write-Verbose "Processing App: $($ManagedApp.displayName)"
 
-        #Write-Verbose "Processing App: $($ManagedApp.displayName)"
+            # Initialize variable
+            $LargeIconFullPathAndFileName = $null
 
-        # Initialize variable
-        $LargeIconFullPathAndFileName = $null
-
-        if ($DownloadAppIcons) {
             #Write-Output "Downloading App icon files to local cache from Graph API for App $($ManagedApp.displayName)"
             
             # Check if we have application icon already in cache folder
             # Use existing icon if found
             $IconFileObject = $null
             $IconFileObject = $CacheIconFiles | Where-Object { $_.BaseName -eq $ManagedApp.id }
-            if ($IconFileObject) {
+            if ($IconFileObject -and (-not ($UpdateIconsCache))) {
                 $LargeIconFullPathAndFileName = $IconFileObject.FullName
                 #Write-Verbose "Found icon file ($LargeIconFullPathAndFileName) for Application id $($ManagedApp.id)"
-                Write-Output "Found cached App icon for App $($ManagedApp.displayName)"
+                #Write-Output "Found cached App icon for App $($ManagedApp.displayName)"
             }
             else {
                 try {
@@ -608,6 +609,7 @@ try {
                         # We create empty file so we know next time that there was no icon in Graph API
                         # This is workaround not to try find non-existing icons over and over again
                         # To check if icon has been added to Intune requires manual deletion of all zero sized "icon" files and running this script
+                        # Or specify option -UpdateIconsCache
                         $filetype = "png"
                         $largeIconBase64 = ''
                     }
@@ -628,6 +630,8 @@ try {
                 }
             }
         }
+    } else {
+        Write-Host "Skipping App Icon downloads..."
     }
     $AppIconDownloadList = $null
 
@@ -653,8 +657,18 @@ try {
     #width: 100%;
     text-align: left;
     border-collapse: collapse;
+    #table-layout: fixed;
     }
-    table td, table th {
+    table td {
+    border: 2px solid #AAAAAA;
+    padding: 5px;
+    max-width: 100;
+    white-space:nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    #word-wrap:break-word;
+    }
+    table th {
     border: 2px solid #AAAAAA;
     padding: 5px;
     }
@@ -714,6 +728,34 @@ try {
     padding: 2px 8px;
     border-radius: 5px;
     }
+    .author .img-top {
+        display: none;
+		position: relative;
+        top: 0;
+        left: 0;
+        z-index: 99;
+    }
+    .author:hover .img-top {
+        display: inline;
+		position: relative;
+        top: 0;
+        left: 0;
+        z-index: 99;
+    }
+	.author:hover .img-back {
+        display: none;
+		position: relative;
+        top: 0;
+        left: 0;
+        z-index: 99;
+    }
+    .author .img-back {
+        display: inline;
+		position: relative;
+        top: 0;
+        left: 0;
+        z-index: 99;
+    }
     </style>
 '@
 
@@ -737,16 +779,23 @@ try {
         $IconFile = Get-ChildItem "$PSScriptRoot\cache\$($IconFileName)*"
 
         if (($IconFile) -and ($IconFile.Length -gt 0)) {
-            # Get base64
+
             $ImageFilePath = $IconFile.FullName
             $ImageType = ($IconFile.Extension).Replace('.', '')
 
-            #$IconBase64 = [convert]::ToBase64String((Get-Content $ImageFilePath -encoding byte))
-
-            $App.icon = "<img src=`"./cache/$($IconFile.Name)`" height=`"25`" />"
+            if ($IncludeBase64ImagesInReport) {
+                # Include base64 encoded image in HTML report
+                # Creates huge HTML files!!!
+                $IconBase64 = [convert]::ToBase64String((Get-Content $ImageFilePath -encoding byte))
+                $App.icon = "<img src=`"data:image/$ImageType;base64,$IconBase64`" height=`"25`" />"
+            }
+            else {
+                # Add icon relative path from cache folder
+                $App.icon = "<img src=`"./cache/$($IconFile.Name)`" height=`"25`" />"
+            }            
         }
         else {
-            # There is no icon file so we leave value empty (it used to be id)
+            # There is no icon file so we leave value empty
             $App.icon = 'no_icon'
         }
     }
@@ -759,7 +808,7 @@ try {
         # WindowsAppsSortedByDisplayName
 
         # Create object with specified attributes and sorting
-        $WindowsAppsByDisplayName = $AppsWithAssignmentInformation | Where-object { ($_.'@odata.type' -eq 'microsoftStoreForBusinessApp') -or ($_.'@odata.type' -eq 'officeSuiteApp') -or ($_.'@odata.type' -eq 'win32LobApp') -or ($_.'@odata.type' -eq 'windowsMicrosoftEdgeApp') -or ($_.'@odata.type' -eq 'windowsMobileMSI') -or ($_.'@odata.type' -eq 'windowsUniversalAppX') } | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id
+        $WindowsAppsByDisplayName = $AppsWithAssignmentInformation | Where-object { ($_.'@odata.type' -eq 'microsoftStoreForBusinessApp') -or ($_.'@odata.type' -eq 'officeSuiteApp') -or ($_.'@odata.type' -eq 'win32LobApp') -or ($_.'@odata.type' -eq 'windowsMicrosoftEdgeApp') -or ($_.'@odata.type' -eq 'windowsMobileMSI') -or ($_.'@odata.type' -eq 'windowsUniversalAppX') } | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id, assignmentIntent
 
         # Create grouping colors by id attribute
         $WindowsAppsByDisplayName = Create-GroupingRowColors $WindowsAppsByDisplayName 'id'
@@ -781,7 +830,7 @@ try {
         # AndroidAppsSortedByDisplayName
 
         # Create object with specified attributes and sorting
-        $AndroidAppsByDisplayName = $AppsWithAssignmentInformation | Where-object { ($_.'@odata.type' -eq 'androidManagedStoreApp') -or ($_.'@odata.type' -eq 'managedAndroidStoreApp') -or ($_.'@odata.type' -eq 'managedAndroidLobApp') } | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id
+        $AndroidAppsByDisplayName = $AppsWithAssignmentInformation | Where-object { ($_.'@odata.type' -eq 'androidManagedStoreApp') -or ($_.'@odata.type' -eq 'managedAndroidStoreApp') -or ($_.'@odata.type' -eq 'managedAndroidLobApp') } | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id, assignmentIntent
 
         # Create grouping colors by id attribute
         $AndroidAppsByDisplayName = Create-GroupingRowColors $AndroidAppsByDisplayName 'id'
@@ -803,7 +852,7 @@ try {
         # iOSAppsSortedByDisplayName
 
         # Create object with specified attributes and sorting
-        $iOSAppsByDisplayName = $AppsWithAssignmentInformation | Where-object { ($_.'@odata.type' -eq 'iosStoreApp') -or ($_.'@odata.type' -eq 'iosVppApp') -or ($_.'@odata.type' -eq 'managedIOSLobApp' -or ($_.'@odata.type' -eq 'managedIOSStoreApp')) } | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id
+        $iOSAppsByDisplayName = $AppsWithAssignmentInformation | Where-object { ($_.'@odata.type' -eq 'iosStoreApp') -or ($_.'@odata.type' -eq 'iosVppApp') -or ($_.'@odata.type' -eq 'managedIOSLobApp' -or ($_.'@odata.type' -eq 'managedIOSStoreApp')) } | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id, assignmentIntent
 
         # Create grouping colors by id attribute
         $iOSAppsByDisplayName = Create-GroupingRowColors $iOSAppsByDisplayName 'id'
@@ -825,7 +874,7 @@ try {
         # macOSAppsSortedByDisplayName
 
         # Create object with specified attributes and sorting
-        $macOSAppsByDisplayName = $AppsWithAssignmentInformation | Where-object { ($_.'@odata.type' -eq 'macOSOfficeSuiteApp') -or ($_.'@odata.type' -eq 'macOSLobApp') -or ($_.'@odata.type' -eq 'macOSMicrosoftEdgeApp') -or ($_.'@odata.type' -eq 'macOsVppApp') } | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id
+        $macOSAppsByDisplayName = $AppsWithAssignmentInformation | Where-object { ($_.'@odata.type' -eq 'macOSOfficeSuiteApp') -or ($_.'@odata.type' -eq 'macOSLobApp') -or ($_.'@odata.type' -eq 'macOSMicrosoftEdgeApp') -or ($_.'@odata.type' -eq 'macOsVppApp') } | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id, assignmentIntent
 
         # Create grouping colors by id attribute
         $macOSAppsByDisplayName = Create-GroupingRowColors $macOSAppsByDisplayName 'id'
@@ -847,7 +896,7 @@ try {
         # WebAppsSortedByDisplayName
 
         # Create object with specified attributes and sorting
-        $WebAppsByDisplayName = $AppsWithAssignmentInformation | Where-object { ($_.'@odata.type' -eq 'webApp') } | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id
+        $WebAppsByDisplayName = $AppsWithAssignmentInformation | Where-object { ($_.'@odata.type' -eq 'webApp') } | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id, assignmentIntent
 
         # Create grouping colors by id attribute
         $WebAppsByDisplayName = Create-GroupingRowColors $WebAppsByDisplayName 'id'
@@ -890,7 +939,7 @@ try {
             ($_.'@odata.type' -ne 'macOSLobApp') -and `
             ($_.'@odata.type' -ne 'macOSMicrosoftEdgeApp') -and `
             ($_.'@odata.type' -ne 'macOsVppApp') }`
-        | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id
+        | Select-Object -Property c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object displayName, id, assignmentIntent
             
         # Create grouping colors by id attribute
         $OtherAppsByDisplayName = Create-GroupingRowColors $OtherAppsByDisplayName 'id'
@@ -911,7 +960,7 @@ try {
         ######################
         # All Apps sorted by assignmentTargetGroupDisplayName
 
-        $htmlObjectAllAppsSortedByAssignmentTargetGroupDisplayName = $AppsWithAssignmentInformation | Select c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object assignmentTargetGroupDisplayName, id
+        $htmlObjectAllAppsSortedByAssignmentTargetGroupDisplayName = $AppsWithAssignmentInformation | Select c, icon, '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id | Sort-Object assignmentTargetGroupDisplayName, assignmentIntent, displayName, id
 
         # Create grouping colors by assignmentTargetGroupDisplayName attribute
         $htmlObjectAllAppsSortedByAssignmentTargetGroupDisplayName = Create-GroupingRowColors $htmlObjectAllAppsSortedByAssignmentTargetGroupDisplayName 'assignmentTargetGroupDisplayName'
@@ -982,7 +1031,10 @@ try {
         Get more Intune reports and tools from<br>`
         <a href=`"https://github.com/petripaavola/Intune`" target=`"_blank`">https://github.com/petripaavola/Intune</a>`
         <br><br><br><br><br><br>`
-        <img src=`"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAZZSURBVHhe7Z1PSBtZHMefu6elSJDWlmAPiolsam2RoKCJFCwiGsih9BY8iaj16qU9edKDHhZvFWyvIqQUpaJsG/+g2G1I0Ii6rLWIVE0KbY2XIgjT90t/3W63s21G5/dm5u37wBd/LyYz8+Y7897MezPvFWgc5kDevHnDZmdn2YcPH9izZ8/Y27dv2fHxMTt37hw7OTlhly5dYsFgkNXU1LBr167hr+yPowzZ2tpiU1NTbGJigm1ubrKDgwP8z/fx+XwsFAqxwcFB/MTGgCF2JxqNavX19XDgnFm3b9/WJicnccn2w9aG3L//m8aPbt0de1b19vZqh4eHuCb7YEtDlpaWNF726+5IM+V2ubR4/Hdcqz2wlSGZTEa7d++e7s6jkoub0tfXZ5uzxTaG7KRSZMVTPopEItqrV69wa6zDFoY8ePBAKysr091RIuXxeLRkMolbZQ2WG8IvY7WioiLdHWSFvF6vlk6ncevEY6khYIbb7dbdMVaqtLRU29+3pviyzJCdnR1bmvFZfr/fkoreEkNSvAK3Q53xI3V3d+MWi0O4IU+ePLH1mfFvPX78GLdcDELbsuLxOKutrcWUM+AHD9vf38cUPT/hX3KgYbCnpwdTzgEaMBcWFjBFjzBD1tbWcmeIExkeHsaIHmGGjIyMYOQ8nj59mmvuF4EwQ2ZmZjByHtlsls3NzWGKFiGGPHz4ECPnMjo6ihEtQgyBLlank0gk2PLyMqboEGJILBbDyNnwexKM6CA3BB5GyLfv2+7MT09jRAe5IfzOHCPn80cqlXvIghJyQ6YFHFUimZ+fx4gGckN2d1MYyYHLRdvSRGoI1B/Pn/+JKTlIpXYxooHUEHiyUDb29vYwooHUkBcvXmAkD5nMXxjRQNr8fuXKFWFtQCKh7LEgM+To6IhXgC5MyQWlIWRFVopfsyuMQ2bIy5cvMVIYgcQQKK42NjYwpTAE1CFmEw6HoZCVVtvb25hT8zG9UnfigwxGMXmXfYXpRdb6+jpGcgKvykEPIhWmG7K4uIiRnGQyGXbr1i1MmQ/ZVZbMQIcbVaebMsRmmG5IVVUVRvJy8eJF1tjYiClzMd2QiooKjOTF7/djZD6mG9LS0iJtG9ZnYEACKkjqkObmZozkBIosKkgMKSwsxEhOAoEARuZDYojMFTuMnQJDdVBBYojMdUhlZSVGNJAY4vF4MFIYhcSQIC+yZL/SooLEEO4GKy8vx4TCCCSGQPdtMpnElMIIJIbI3H179epVjGggMeTmzZs5yQh13UhiCGx0NBplbvcv+Ik8FBcXY0QDTaXOAVN8vl8xJQ8Vly9jRAOZIcCFC16M5MFH2NILkBoi2w2i10t/gJEaIlubloj8kBpC2ZFjBSLyQ2oInOIweIssiGh9IDUEaGhowMj5iKgTyQ2hehhANNBL6PgiC6irq8PI2YTDYYxoETKAWUFBAUbOBQafuXHjBqboUIbkAUx3sbq6iilaSIosGD3u7t27rLW1VYpGxjt37mAkADhDzAKGfu3o6Mi9QyGLYJoMkZhmCJjhhKFfjSqRSGAOxWCKIdlsVqup8epmyMnq6urCHIrjzIaAGTK+wsbvO7R3795hLsVxJkNkNQM0NDSEuRTLqQ2BslXELDhWSHRF/k9OZUh/f7+tppgwU1BUUb5l+yMMGQJFVFtbm25GZNHY2Bjm1hryNiQWi2nV1dW6mZBFcA9lNbpNJzAs+OvXr3NvnKbT6dyDbzBU3/v37/EbcgJv10YikdxIFCUlJaypqQn/I5CcLcjS1JT0Z4ERXb9+XYvH47h3xPC3ITAxl95G/d/lcrmEThSWM+TRo0e6G6P0Sa2tAWHTH+UMCQQCuhui9EVut0vIHLpMFVXGRG0KX4f+ipX+W8FgkKyyh648WInCIKVuN1vZ3DT9aXjyhxxkZefggGQY9Z+5+j6FCqNAV/X58+dNfzP3mzJSyZjMrFP48vRXomRcYEw0Gj3TPQtfjv7ClU4vmMm0s7PzVPOz89/rL1Tp7IJml4GBAdzV+cF/p78wJfMEM0+vrKzgLv8+/Pv6C1EyV/meLfy7+gtQolF7ezvuen3UnboFwIh08K4J/OUG4adf+MZFJXEKhUJfXSbzz/S/qCROcJk8Pj6eM0QVWTYCZtRWhtgIaDlWhtgM1fxuM5QhNkMZYisY+wgmXgaK/b+vnQAAAABJRU5ErkJggg==`" alt=`"Petri Paavola`"><br>`
+        <div class=`"author`">`
+            <img src=`"data:image/png;base64,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`" class=`"img-top`" alt=`"Petri Paavola`">`
+            <img src=`"data:image/png;base64,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`" class=`"img-back`" alt=`"Petri Paavola`">`
+        </div>`
         Petri.Paavola@yodamiitti.fi<br><br>`
         Microsoft MVP<br>`
         Windows and Devices for IT<br><br>`
@@ -1057,3 +1109,187 @@ catch {
     Write-Error "$($_.Exception.GetType().FullName)"
     Write-Error "$($_.Exception.Message)"
 }
+
+# SIG # Begin signature block
+# MIIh1wYJKoZIhvcNAQcCoIIhyDCCIcQCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
+# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUqBK5tjdqdYVHjEs/eM0VnFud
+# T6Cggh1EMIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0B
+# AQUFADBsMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYD
+# VQQLExB3d3cuZGlnaWNlcnQuY29tMSswKQYDVQQDEyJEaWdpQ2VydCBIaWdoIEFz
+# c3VyYW5jZSBFViBSb290IENBMB4XDTA2MTExMDAwMDAwMFoXDTMxMTExMDAwMDAw
+# MFowbDELMAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0IEluYzEZMBcGA1UE
+# CxMQd3d3LmRpZ2ljZXJ0LmNvbTErMCkGA1UEAxMiRGlnaUNlcnQgSGlnaCBBc3N1
+# cmFuY2UgRVYgUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB
+# AMbM5XPm+9S75S0tMqbf5YE/yc0lSbZxKsPVlDRnogocsF9ppkCxxLeyj9CYpKlB
+# WTrT3JTWPNt0OKRKzE0lgvdKpVMSOO7zSW1xkX5jtqumX8OkhPhPYlG++MXs2ziS
+# 4wblCJEMxChBVfvLWokVfnHoNb9Ncgk9vjo4UFt3MRuNs8ckRZqnrG0AFFoEt7oT
+# 61EKmEFBIk5lYYeBQVCmeVyJ3hlKV9Uu5l0cUyx+mM0aBhakaHPQNAQTXKFx01p8
+# VdteZOE3hzBWBOURtCmAEvF5OYiiAhF8J2a3iLd48soKqDirCmTCv2ZdlYTBoSUe
+# h10aUAsgEsxBu24LUTi4S8sCAwEAAaNjMGEwDgYDVR0PAQH/BAQDAgGGMA8GA1Ud
+# EwEB/wQFMAMBAf8wHQYDVR0OBBYEFLE+w2kD+L9HAdSYJhoIAu9jZCvDMB8GA1Ud
+# IwQYMBaAFLE+w2kD+L9HAdSYJhoIAu9jZCvDMA0GCSqGSIb3DQEBBQUAA4IBAQAc
+# GgaX3NecnzyIZgYIVyHbIUf4KmeqvxgydkAQV8GK83rZEWWONfqe/EW1ntlMMUu4
+# kehDLI6zeM7b41N5cdblIZQB2lWHmiRk9opmzN6cN82oNLFpmyPInngiK3BD41VH
+# MWEZ71jFhS9OMPagMRYjyOfiZRYzy78aG6A9+MpeizGLYAiJLQwGXFK3xPkKmNEV
+# X58Svnw2Yzi9RKR/5CYrCsSXaQ3pjOLAEFe4yHYSkVXySGnYvCoCWw9E1CAx2/S6
+# cCZdkGCevEsXCS+0yx5DaMkHJ8HSXPfqIbloEpw8nL+e/IBcm2PN7EeqJSdnoDfz
+# AIJ9VNep+OkuE6N36B9KMIIFeDCCBGCgAwIBAgIQBQbkfYp2NP3HW6pLDphGODAN
+# BgkqhkiG9w0BAQsFADBsMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQg
+# SW5jMRkwFwYDVQQLExB3d3cuZGlnaWNlcnQuY29tMSswKQYDVQQDEyJEaWdpQ2Vy
+# dCBFViBDb2RlIFNpZ25pbmcgQ0EgKFNIQTIpMB4XDTE3MTAxMTAwMDAwMFoXDTIw
+# MTAxNDEyMDAwMFowgZUxEzARBgsrBgEEAYI3PAIBAxMCRkkxHTAbBgNVBA8MFFBy
+# aXZhdGUgT3JnYW5pemF0aW9uMRIwEAYDVQQFEwkyNTQzMTQ0LTgxCzAJBgNVBAYT
+# AkZJMQ4wDAYDVQQHEwVFc3BvbzEWMBQGA1UEChMNWW9kYW1paXR0aSBPeTEWMBQG
+# A1UEAxMNWW9kYW1paXR0aSBPeTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+# ggEBAKT23in8UmTBz9Gz0DqujCVYyRZlJLH+hid+XUtouAFQ6KegkazzQgMcKi05
+# 5pGZ1PFG0cURqNYjDpxaG5fmsWFWFGj63NRtXkDCNN12lJJA96sLxfcX9AsjSxaj
+# LkZ8Cje+TAbV3j1Jf4+mnMeh/y3NnNsGkP7Ii9ZsNFBZvo+ipv/OGUryfcDi5sZt
+# WXb7w/x/4i5LVyC607ThQF3BOYxo2FWSVWrT3qvN4jntpkU3pHLvl0ktvCigXPKs
+# vn1DKG5A2UlsKj3HWRGImAI/wbyP0/LQPLgqdxTtt8anHI3NrEI2+WQhrxLED+FZ
+# xKNmaLgxI8giI5GqKWtJlGviXAkCAwEAAaOCAeowggHmMB8GA1UdIwQYMBaAFI/o
+# fvBtMmoABSPHcJdqOpD/a+rUMB0GA1UdDgQWBBSx3zynPP0jv/yzR+jzY2PIsHEY
+# +TAnBgNVHREEIDAeoBwGCCsGAQUFBwgDoBAwDgwMRkktMjU0MzE0NC04MA4GA1Ud
+# DwEB/wQEAwIHgDATBgNVHSUEDDAKBggrBgEFBQcDAzB7BgNVHR8EdDByMDegNaAz
+# hjFodHRwOi8vY3JsMy5kaWdpY2VydC5jb20vRVZDb2RlU2lnbmluZ1NIQTItZzEu
+# Y3JsMDegNaAzhjFodHRwOi8vY3JsNC5kaWdpY2VydC5jb20vRVZDb2RlU2lnbmlu
+# Z1NIQTItZzEuY3JsMEsGA1UdIAREMEIwNwYJYIZIAYb9bAMCMCowKAYIKwYBBQUH
+# AgEWHGh0dHBzOi8vd3d3LmRpZ2ljZXJ0LmNvbS9DUFMwBwYFZ4EMAQMwfgYIKwYB
+# BQUHAQEEcjBwMCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2VydC5jb20w
+# SAYIKwYBBQUHMAKGPGh0dHA6Ly9jYWNlcnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2Vy
+# dEVWQ29kZVNpZ25pbmdDQS1TSEEyLmNydDAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3
+# DQEBCwUAA4IBAQAiZKBW4WeI27Dua1pfjCH0FhuUrEv/jDR5uBOyGt6DEslF/O2K
+# 91RsKUU4Z6HEOsIGC+mNmrlg0PPQquU7mvudexoo1QXVZW4NQrQc9dJuuwqgyk56
+# PA8l0S6JDUwNX2UgIjfz3oSeDQqxcR1V7UvyAzuxOg/zCUqv8FL4iuIvlCBNxJ8o
+# f02/vzsRwI8YPRvT6Xh2zVIygpPip/r4MTuPOfvSEK3Id2WmLNT8YLH7Er1Laum9
+# p22FM7wpml43qRkbMjnOst949kUZ/DGUwcMDQSLKp5z4suz4578is3L1VMmnsIHc
+# g0Li8TtAypPpcA4RBnP7u6+GuIldKeAPqs5SMIIGajCCBVKgAwIBAgIQAwGaAjr/
+# WLFr1tXq5hfwZjANBgkqhkiG9w0BAQUFADBiMQswCQYDVQQGEwJVUzEVMBMGA1UE
+# ChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3d3cuZGlnaWNlcnQuY29tMSEwHwYD
+# VQQDExhEaWdpQ2VydCBBc3N1cmVkIElEIENBLTEwHhcNMTQxMDIyMDAwMDAwWhcN
+# MjQxMDIyMDAwMDAwWjBHMQswCQYDVQQGEwJVUzERMA8GA1UEChMIRGlnaUNlcnQx
+# JTAjBgNVBAMTHERpZ2lDZXJ0IFRpbWVzdGFtcCBSZXNwb25kZXIwggEiMA0GCSqG
+# SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCjZF38fLPggjXg4PbGKuZJdTvMbuBTqZ8f
+# ZFnmfGt/a4ydVfiS457VWmNbAklQ2YPOb2bu3cuF6V+l+dSHdIhEOxnJ5fWRn8YU
+# Oawk6qhLLJGJzF4o9GS2ULf1ErNzlgpno75hn67z/RJ4dQ6mWxT9RSOOhkRVfRiG
+# BYxVh3lIRvfKDo2n3k5f4qi2LVkCYYhhchhoubh87ubnNC8xd4EwH7s2AY3vJ+P3
+# mvBMMWSN4+v6GYeofs/sjAw2W3rBerh4x8kGLkYQyI3oBGDbvHN0+k7Y/qpA8bLO
+# cEaD6dpAoVk62RUJV5lWMJPzyWHM0AjMa+xiQpGsAsDvpPCJEY93AgMBAAGjggM1
+# MIIDMTAOBgNVHQ8BAf8EBAMCB4AwDAYDVR0TAQH/BAIwADAWBgNVHSUBAf8EDDAK
+# BggrBgEFBQcDCDCCAb8GA1UdIASCAbYwggGyMIIBoQYJYIZIAYb9bAcBMIIBkjAo
+# BggrBgEFBQcCARYcaHR0cHM6Ly93d3cuZGlnaWNlcnQuY29tL0NQUzCCAWQGCCsG
+# AQUFBwICMIIBVh6CAVIAQQBuAHkAIAB1AHMAZQAgAG8AZgAgAHQAaABpAHMAIABD
+# AGUAcgB0AGkAZgBpAGMAYQB0AGUAIABjAG8AbgBzAHQAaQB0AHUAdABlAHMAIABh
+# AGMAYwBlAHAAdABhAG4AYwBlACAAbwBmACAAdABoAGUAIABEAGkAZwBpAEMAZQBy
+# AHQAIABDAFAALwBDAFAAUwAgAGEAbgBkACAAdABoAGUAIABSAGUAbAB5AGkAbgBn
+# ACAAUABhAHIAdAB5ACAAQQBnAHIAZQBlAG0AZQBuAHQAIAB3AGgAaQBjAGgAIABs
+# AGkAbQBpAHQAIABsAGkAYQBiAGkAbABpAHQAeQAgAGEAbgBkACAAYQByAGUAIABp
+# AG4AYwBvAHIAcABvAHIAYQB0AGUAZAAgAGgAZQByAGUAaQBuACAAYgB5ACAAcgBl
+# AGYAZQByAGUAbgBjAGUALjALBglghkgBhv1sAxUwHwYDVR0jBBgwFoAUFQASKxOY
+# spkH7R7for5XDStnAs0wHQYDVR0OBBYEFGFaTSS2STKdSip5GoNL9B6Jwcp9MH0G
+# A1UdHwR2MHQwOKA2oDSGMmh0dHA6Ly9jcmwzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2Vy
+# dEFzc3VyZWRJRENBLTEuY3JsMDigNqA0hjJodHRwOi8vY3JsNC5kaWdpY2VydC5j
+# b20vRGlnaUNlcnRBc3N1cmVkSURDQS0xLmNybDB3BggrBgEFBQcBAQRrMGkwJAYI
+# KwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmRpZ2ljZXJ0LmNvbTBBBggrBgEFBQcwAoY1
+# aHR0cDovL2NhY2VydHMuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0QXNzdXJlZElEQ0Et
+# MS5jcnQwDQYJKoZIhvcNAQEFBQADggEBAJ0lfhszTbImgVybhs4jIA+Ah+WI//+x
+# 1GosMe06FxlxF82pG7xaFjkAneNshORaQPveBgGMN/qbsZ0kfv4gpFetW7easGAm
+# 6mlXIV00Lx9xsIOUGQVrNZAQoHuXx/Y/5+IRQaa9YtnwJz04HShvOlIJ8OxwYtNi
+# S7Dgc6aSwNOOMdgv420XEwbu5AO2FKvzj0OncZ0h3RTKFV2SQdr5D4HRmXQNJsQO
+# fxu19aDxxncGKBXp2JPlVRbwuwqrHNtcSCdmyKOLChzlldquxC5ZoGHd2vNtomHp
+# igtt7BIYvfdVVEADkitrwlHCCkivsNRu4PQUCjob4489yq9qjXvc2EQwgga8MIIF
+# pKADAgECAhAD8bThXzqC8RSWeLPX2EdcMA0GCSqGSIb3DQEBCwUAMGwxCzAJBgNV
+# BAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdp
+# Y2VydC5jb20xKzApBgNVBAMTIkRpZ2lDZXJ0IEhpZ2ggQXNzdXJhbmNlIEVWIFJv
+# b3QgQ0EwHhcNMTIwNDE4MTIwMDAwWhcNMjcwNDE4MTIwMDAwWjBsMQswCQYDVQQG
+# EwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3d3cuZGlnaWNl
+# cnQuY29tMSswKQYDVQQDEyJEaWdpQ2VydCBFViBDb2RlIFNpZ25pbmcgQ0EgKFNI
+# QTIpMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp1P6D7K1E/Fkz4SA
+# /K6ANdG218ejLKwaLKzxhKw6NRI6kpG6V+TEyfMvqEg8t9Zu3JciulF5Ya9DLw23
+# m7RJMa5EWD6koZanh08jfsNsZSSQVT6hyiN8xULpxHpiRZt93mN0y55jJfiEmpqt
+# RU+ufR/IE8t1m8nh4Yr4CwyY9Mo+0EWqeh6lWJM2NL4rLisxWGa0MhCfnfBSoe/o
+# PtN28kBa3PpqPRtLrXawjFzuNrqD6jCoTN7xCypYQYiuAImrA9EWgiAiduteVDgS
+# YuHScCTb7R9w0mQJgC3itp3OH/K7IfNs29izGXuKUJ/v7DYKXJq3StMIoDl5/d2/
+# PToJJQIDAQABo4IDWDCCA1QwEgYDVR0TAQH/BAgwBgEB/wIBADAOBgNVHQ8BAf8E
+# BAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwfwYIKwYBBQUHAQEEczBxMCQGCCsG
+# AQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2VydC5jb20wSQYIKwYBBQUHMAKGPWh0
+# dHA6Ly9jYWNlcnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydEhpZ2hBc3N1cmFuY2VF
+# VlJvb3RDQS5jcnQwgY8GA1UdHwSBhzCBhDBAoD6gPIY6aHR0cDovL2NybDMuZGln
+# aWNlcnQuY29tL0RpZ2lDZXJ0SGlnaEFzc3VyYW5jZUVWUm9vdENBLmNybDBAoD6g
+# PIY6aHR0cDovL2NybDQuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0SGlnaEFzc3VyYW5j
+# ZUVWUm9vdENBLmNybDCCAcQGA1UdIASCAbswggG3MIIBswYJYIZIAYb9bAMCMIIB
+# pDA6BggrBgEFBQcCARYuaHR0cDovL3d3dy5kaWdpY2VydC5jb20vc3NsLWNwcy1y
+# ZXBvc2l0b3J5Lmh0bTCCAWQGCCsGAQUFBwICMIIBVh6CAVIAQQBuAHkAIAB1AHMA
+# ZQAgAG8AZgAgAHQAaABpAHMAIABDAGUAcgB0AGkAZgBpAGMAYQB0AGUAIABjAG8A
+# bgBzAHQAaQB0AHUAdABlAHMAIABhAGMAYwBlAHAAdABhAG4AYwBlACAAbwBmACAA
+# dABoAGUAIABEAGkAZwBpAEMAZQByAHQAIABDAFAALwBDAFAAUwAgAGEAbgBkACAA
+# dABoAGUAIABSAGUAbAB5AGkAbgBnACAAUABhAHIAdAB5ACAAQQBnAHIAZQBlAG0A
+# ZQBuAHQAIAB3AGgAaQBjAGgAIABsAGkAbQBpAHQAIABsAGkAYQBiAGkAbABpAHQA
+# eQAgAGEAbgBkACAAYQByAGUAIABpAG4AYwBvAHIAcABvAHIAYQB0AGUAZAAgAGgA
+# ZQByAGUAaQBuACAAYgB5ACAAcgBlAGYAZQByAGUAbgBjAGUALjAdBgNVHQ4EFgQU
+# j+h+8G0yagAFI8dwl2o6kP9r6tQwHwYDVR0jBBgwFoAUsT7DaQP4v0cB1JgmGggC
+# 72NkK8MwDQYJKoZIhvcNAQELBQADggEBABkzSgyBMzfbrTbJ5Mk6u7UbLnqi4vRD
+# Qheev06hTeGx2+mB3Z8B8uSI1en+Cf0hwexdgNLw1sFDwv53K9v515EzzmzVshk7
+# 5i7WyZNPiECOzeH1fvEPxllWcujrakG9HNVG1XxJymY4FcG/4JFwd4fcyY0xyQwp
+# ojPtjeKHzYmNPxv/1eAal4t82m37qMayOmZrewGzzdimNOwSAauVWKXEU1eoYObn
+# AhKguSNkok27fIElZCG+z+5CGEOXu6U3Bq9N/yalTWFL7EZBuGXOuHmeCJYLgYyK
+# O4/HmYyjKm6YbV5hxpa3irlhLZO46w4EQ9f1/qbwYtSZaqXBwfBklIAwggbNMIIF
+# taADAgECAhAG/fkDlgOt6gAK6z8nu7obMA0GCSqGSIb3DQEBBQUAMGUxCzAJBgNV
+# BAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdp
+# Y2VydC5jb20xJDAiBgNVBAMTG0RpZ2lDZXJ0IEFzc3VyZWQgSUQgUm9vdCBDQTAe
+# Fw0wNjExMTAwMDAwMDBaFw0yMTExMTAwMDAwMDBaMGIxCzAJBgNVBAYTAlVTMRUw
+# EwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20x
+# ITAfBgNVBAMTGERpZ2lDZXJ0IEFzc3VyZWQgSUQgQ0EtMTCCASIwDQYJKoZIhvcN
+# AQEBBQADggEPADCCAQoCggEBAOiCLZn5ysJClaWAc0Bw0p5WVFypxNJBBo/JM/xN
+# RZFcgZ/tLJz4FlnfnrUkFcKYubR3SdyJxArar8tea+2tsHEx6886QAxGTZPsi3o2
+# CAOrDDT+GEmC/sfHMUiAfB6iD5IOUMnGh+s2P9gww/+m9/uizW9zI/6sVgWQ8DIh
+# FonGcIj5BZd9o8dD3QLoOz3tsUGj7T++25VIxO4es/K8DCuZ0MZdEkKB4YNugnM/
+# JksUkK5ZZgrEjb7SzgaurYRvSISbT0C58Uzyr5j79s5AXVz2qPEvr+yJIvJrGGWx
+# wXOt1/HYzx4KdFxCuGh+t9V3CidWfA9ipD8yFGCV/QcEogkCAwEAAaOCA3owggN2
+# MA4GA1UdDwEB/wQEAwIBhjA7BgNVHSUENDAyBggrBgEFBQcDAQYIKwYBBQUHAwIG
+# CCsGAQUFBwMDBggrBgEFBQcDBAYIKwYBBQUHAwgwggHSBgNVHSAEggHJMIIBxTCC
+# AbQGCmCGSAGG/WwAAQQwggGkMDoGCCsGAQUFBwIBFi5odHRwOi8vd3d3LmRpZ2lj
+# ZXJ0LmNvbS9zc2wtY3BzLXJlcG9zaXRvcnkuaHRtMIIBZAYIKwYBBQUHAgIwggFW
+# HoIBUgBBAG4AeQAgAHUAcwBlACAAbwBmACAAdABoAGkAcwAgAEMAZQByAHQAaQBm
+# AGkAYwBhAHQAZQAgAGMAbwBuAHMAdABpAHQAdQB0AGUAcwAgAGEAYwBjAGUAcAB0
+# AGEAbgBjAGUAIABvAGYAIAB0AGgAZQAgAEQAaQBnAGkAQwBlAHIAdAAgAEMAUAAv
+# AEMAUABTACAAYQBuAGQAIAB0AGgAZQAgAFIAZQBsAHkAaQBuAGcAIABQAGEAcgB0
+# AHkAIABBAGcAcgBlAGUAbQBlAG4AdAAgAHcAaABpAGMAaAAgAGwAaQBtAGkAdAAg
+# AGwAaQBhAGIAaQBsAGkAdAB5ACAAYQBuAGQAIABhAHIAZQAgAGkAbgBjAG8AcgBw
+# AG8AcgBhAHQAZQBkACAAaABlAHIAZQBpAG4AIABiAHkAIAByAGUAZgBlAHIAZQBu
+# AGMAZQAuMAsGCWCGSAGG/WwDFTASBgNVHRMBAf8ECDAGAQH/AgEAMHkGCCsGAQUF
+# BwEBBG0wazAkBggrBgEFBQcwAYYYaHR0cDovL29jc3AuZGlnaWNlcnQuY29tMEMG
+# CCsGAQUFBzAChjdodHRwOi8vY2FjZXJ0cy5kaWdpY2VydC5jb20vRGlnaUNlcnRB
+# c3N1cmVkSURSb290Q0EuY3J0MIGBBgNVHR8EejB4MDqgOKA2hjRodHRwOi8vY3Js
+# My5kaWdpY2VydC5jb20vRGlnaUNlcnRBc3N1cmVkSURSb290Q0EuY3JsMDqgOKA2
+# hjRodHRwOi8vY3JsNC5kaWdpY2VydC5jb20vRGlnaUNlcnRBc3N1cmVkSURSb290
+# Q0EuY3JsMB0GA1UdDgQWBBQVABIrE5iymQftHt+ivlcNK2cCzTAfBgNVHSMEGDAW
+# gBRF66Kv9JLLgjEtUYunpyGd823IDzANBgkqhkiG9w0BAQUFAAOCAQEARlA+ybco
+# JKc4HbZbKa9Sz1LpMUerVlx71Q0LQbPv7HUfdDjyslxhopyVw1Dkgrkj0bo6hnKt
+# OHisdV0XFzRyR4WUVtHruzaEd8wkpfMEGVWp5+Pnq2LN+4stkMLA0rWUvV5PsQXS
+# Dj0aqRRbpoYxYqioM+SbOafE9c4deHaUJXPkKqvPnHZL7V/CSxbkS3BMAIke/MV5
+# vEwSV/5f4R68Al2o/vsHOE8Nxl2RuQ9nRc3Wg+3nkg2NsWmMT/tZ4CMP0qquAHzu
+# nEIOz5HXJ7cW7g/DvXwKoO4sCFWFIrjrGBpN/CohrUkxg0eVd3HcsRtLSxwQnHcU
+# wZ1PL1qVCCkQJjGCA/0wggP5AgEBMIGAMGwxCzAJBgNVBAYTAlVTMRUwEwYDVQQK
+# EwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xKzApBgNV
+# BAMTIkRpZ2lDZXJ0IEVWIENvZGUgU2lnbmluZyBDQSAoU0hBMikCEAUG5H2KdjT9
+# x1uqSw6YRjgwCQYFKw4DAhoFAKBAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEE
+# MCMGCSqGSIb3DQEJBDEWBBQVkQdQZJKOHYWsilNJixDEmFSxfDANBgkqhkiG9w0B
+# AQEFAASCAQAO5JcEet1AC6/K3P3Cla2QIdWGPejpjvQz5rMYH+xaDciNZYHIJb7c
+# +7eDjAn88rhsEfUE0z1YVWM6hZDGpSTb99t2i7dmegC+qlJgjzojRf6ASbTjqp98
+# orS200tgidprnEp875gu7vZjMYsvi9dBp7VgnvEAb3GHIysu0K9mCyIVCEtLTTGN
+# XHd5a+MxL8vJlpXX6IWbDc89bS7kaBsnLQ9Qm6jRVmm3P2TbSWWdNhcZd+4DWSs7
+# at+x15CGoGWkC4CXy9LqgUYvyFiaF+naGtPV7AcT81q0VeGdMpkL7Z91TJAmnZwv
+# K9xyQI643V1LBIe7md/YmJV7sJXWi8ayoYICDzCCAgsGCSqGSIb3DQEJBjGCAfww
+# ggH4AgEBMHYwYjELMAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0IEluYzEZ
+# MBcGA1UECxMQd3d3LmRpZ2ljZXJ0LmNvbTEhMB8GA1UEAxMYRGlnaUNlcnQgQXNz
+# dXJlZCBJRCBDQS0xAhADAZoCOv9YsWvW1ermF/BmMAkGBSsOAwIaBQCgXTAYBgkq
+# hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0xOTExMjYyMDU4
+# MjVaMCMGCSqGSIb3DQEJBDEWBBTbOuxCc+rI/457ds+bNThFsvpWezANBgkqhkiG
+# 9w0BAQEFAASCAQBATpdQrQlbLxPCPHBZ+EaYQNU6EJr6DiIrWzunmFEp4C3Ne/o0
+# XVz+/USfzrA8d72ZWbFYq7dvMydG8Rxyr3XZGfJkLHnbeVzKq0Y/T23qMzteJdc/
+# UXaR90u21Zm5uM6opSTk3Mrg5PppUPynLoKLMbXho4Kre7fQyydPR8hEzq5aZtaK
+# qduQuot2sdwYojY52XgwQ2NcWF4XLQ8M+tbMwDzD8PCazyVFGXm/lB8/stVwIPRV
+# DO4N+PE8yDhgSPtBHk7U38ub3pNPuOEwS87UecXN3bVzQZQ9bE0TDbszV+NlUmf2
+# uTX+ndHkPjy4IzpZBeE3pQAo1t5BTa7kMk2b
+# SIG # End signature block
