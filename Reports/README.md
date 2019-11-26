@@ -11,10 +11,10 @@ Reports which we don't have in Intune (at least at this time)
 Platform based tables and quick links
 
 ### Overview
-![Report_WindowsAppAssignmentsOverview.png](https://github.com/petripaavola/Intune/blob/master/Reports/Report_WindowsAppAssignmentsOverview.png)
+![Report_WindowsAppAssignmentsOverview2.png](https://github.com/petripaavola/Intune/blob/master/Reports/Report_WindowsAppAssignmentsOverview2.png)
 
 ### Where application is assigned to
-![Report_WindowsAppAssignmentsSortedWithAppDisplayName.png](https://github.com/petripaavola/Intune/blob/master/Reports/Report_WindowsAppAssignmentsSortedWithAppDisplayName.png)
+![Report_WindowsAppAssignmentsSortedWithAppDisplayName2.png](https://github.com/petripaavola/Intune/blob/master/Reports/Report_WindowsAppAssignmentsSortedWithAppDisplayName2.png)
 
 ### What Apps are assigned to AzureAD Group
-![Report_WindowsAppAssignmentsGroupedByAssignmentGroupName.png](https://github.com/petripaavola/Intune/blob/master/Reports/Report_WindowsAppAssignmentsGroupedByAssignmentGroupName.png)
+![Report_WindowsAppAssignmentsGroupedByAssignmentGroupName2.png](https://github.com/petripaavola/Intune/blob/master/Reports/Report_WindowsAppAssignmentsGroupedByAssignmentGroupName2.png)
