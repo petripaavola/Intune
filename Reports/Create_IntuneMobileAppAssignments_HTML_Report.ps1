@@ -1,5 +1,11 @@
 # Create HTML Report from all Intune App Assignments
 #
+# Petri.Paavola@yodamiitti.fi
+# Microsoft MVP - Windows and Devices for IT
+# 20200331 (updated)
+#
+# https://github.com/petripaavola/Intune
+#
 # Script downloads AzureADGroup and IntuneApp information from Graph API to local cache   (.\cache)
 #
 # Created files are:
@@ -7,6 +13,7 @@
 # .\cache\AllApps.json
 #
 # Downloads also Application icons to local cache to get better looking report.
+#
 # You can run this once and/or update icons periodically if there were changes in Intune for existing Apps
 # New Apps will always get icons downloaded automatically
 # .\Create_IntuneMobileAppAssignments_HTML_Report.ps1 -UpdateIconsCache
@@ -18,11 +25,6 @@
 # This creates HUGE file sizes so use at your own risk
 # .\Create_IntuneMobileAppAssignments_HTML_Report.ps1 -IncludeBase64ImagesInReport
 #
-# Petri.Paavola@yodamiitti.fi
-# Microsoft MVP
-# 20191126
-#
-# https://github.com/petripaavola/Intune
 
 Param(
     [Switch]$UseOfflineCache,
@@ -37,7 +39,7 @@ if ($UseOfflineCache) {
     $DoNotDownloadAppIcons = $true
 }
 
-$ScriptVersion = "ver 1.4"
+$ScriptVersion = "ver 1.6"
 
 
 function Verify-IntuneModuleExistence {
@@ -107,6 +109,26 @@ function Fix-HTMLSyntax {
     $html = $html.Replace('&lt;', '<')
     $html = $html.Replace('&gt;', '>')
     $html = $html.Replace('&quot;', '"')
+
+    return $html
+}
+
+function Fix-HTMLColumns {
+    Param(
+        $html
+    )
+
+    # Remove c column and rename column headers
+    $html = $html -replace '<th>c</th>',''
+    $html = $html -replace '<th>@odata.type</th>','<th>App type</th>'
+    $html = $html -replace '<th>displayname</th>','<th>App name</th>'
+    $html = $html -replace '<th>assignmentIntent</th>','<th>Assignment Intent</th>'
+    $html = $html -replace '<th>assignmentTargetGroupDisplayName</th>','<th>Target Group</th>'
+    $html = $html -replace '<th>publisher</th>','<th>Publisher</th>'
+    $html = $html -replace '<th>productVersion</th>','<th>Version</th>'
+    $html = $html -replace '<th>filename</th>','<th>Filename</th>'
+    $html = $html -replace '<th>createdDateTime</th>','<th>Created</th>'
+    $html = $html -replace '<th>lastModifiedDateTime</th>','<th>Modified</th>'
 
     return $html
 }
@@ -188,7 +210,11 @@ function Change-HTMLTableSyntaxWithRegexpForAppsSortedByDisplayName {
         }
 
         # This is returned from MatchEvaluator
-        "<tr bgcolor=`"$RowColor`"><td></td><td>$($match.Groups[5].Value)</td><td>$($match.Groups[7].Value)</td><td style=`"font-weight:bold`">$AppDisplayName</td>$($IntentTD)$($match.Groups[15].Value)</td><td>$id</td></tr>"
+        
+        # Before c column remove
+        #"<tr bgcolor=`"$RowColor`"><td></td><td>$($match.Groups[5].Value)</td><td>$($match.Groups[7].Value)</td><td style=`"font-weight:bold`">$AppDisplayName</td>$($IntentTD)$($match.Groups[15].Value)</td><td>$id</td></tr>"
+
+        "<tr bgcolor=`"$RowColor`"><td>$($match.Groups[5].Value)</td><td>$($match.Groups[7].Value)</td><td style=`"font-weight:bold`">$AppDisplayName</td>$($IntentTD)$($match.Groups[15].Value)</td><td>$id</td></tr>"
     }
 
     # $html1 is now single string object with multiple lines separated by newline
@@ -244,7 +270,11 @@ function Change-HTMLTableSyntaxWithRegexpForAppsSortedByAssignmentTargetGroupDis
         }
 
         # This is returned from MatchEvaluator
-        "<tr bgcolor=`"$RowColor`"><td></td><td>$($match.Groups[5].Value)</td><td>$($match.Groups[7].Value)</td><td>$AppDisplayName</td>$($IntentTD)<td style=`"font-weight:bold`">$assignmentTargetGroupDisplayName</td>$($match.Groups[18].Value)</td><td>$id</td></tr>"
+
+        # Before c column remove
+        #"<tr bgcolor=`"$RowColor`"><td></td><td>$($match.Groups[5].Value)</td><td>$($match.Groups[7].Value)</td><td>$AppDisplayName</td>$($IntentTD)<td style=`"font-weight:bold`">$assignmentTargetGroupDisplayName</td>$($match.Groups[18].Value)</td><td>$id</td></tr>"
+
+        "<tr bgcolor=`"$RowColor`"><td>$($match.Groups[5].Value)</td><td>$($match.Groups[7].Value)</td><td>$AppDisplayName</td>$($IntentTD)<td style=`"font-weight:bold`">$assignmentTargetGroupDisplayName</td>$($match.Groups[18].Value)</td><td>$id</td></tr>"
     }
 
     # $html1 is now single string object with multiple lines separated by newline
@@ -813,7 +843,7 @@ try {
         # Create grouping colors by id attribute
         $WindowsAppsByDisplayName = Create-GroupingRowColors $WindowsAppsByDisplayName 'id'
 
-        $PreContent = "<h2 id=`"WindowsAppsSortedByAppdisplayName`">Windows App Assignments sorted with App displayName</h2>"
+        $PreContent = "<h2 id=`"WindowsAppsSortedByAppdisplayName`">Windows Apps Assignments by AppName</h2>"
         $WindowsAppsByDisplayNameHTML = $WindowsAppsByDisplayName | ConvertTo-Html -Fragment -PreContent $PreContent | Out-String
 
         # Fix &lt; &quot; etc...
@@ -822,6 +852,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold DisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $WindowsAppsByDisplayNameHTML = Change-HTMLTableSyntaxWithRegexpForAppsSortedByDisplayName $WindowsAppsByDisplayNameHTML
+
+        # Fix column names and remove c column
+        $WindowsAppsByDisplayNameHTML = Fix-HTMLColumns $WindowsAppsByDisplayNameHTML
 
         # Debug- save $html1 to file
         #$WindowsAppsByDisplayNameHTML | Out-File "$PSScriptRoot\WindowsAppsByDisplayNameHTML.html"
@@ -835,7 +868,7 @@ try {
         # Create grouping colors by id attribute
         $AndroidAppsByDisplayName = Create-GroupingRowColors $AndroidAppsByDisplayName 'id'
 
-        $PreContent = "<h2 id=`"AndroidAppsSortedByAppdisplayName`">Android App Assignments sorted with App displayName</h2>"
+        $PreContent = "<h2 id=`"AndroidAppsSortedByAppdisplayName`">Android Apps Assignments by AppName</h2>"
         $AndroidAppsByDisplayNameHTML = $AndroidAppsByDisplayName | ConvertTo-Html -Fragment -PreContent $PreContent | Out-String
 
         # Fix &lt; &quot; etc...
@@ -844,6 +877,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold DisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $AndroidAppsByDisplayNameHTML = Change-HTMLTableSyntaxWithRegexpForAppsSortedByDisplayName $AndroidAppsByDisplayNameHTML
+
+        # Fix column names and remove c column
+        $AndroidAppsByDisplayNameHTML = Fix-HTMLColumns $AndroidAppsByDisplayNameHTML
 
         # Debug- save $html1 to file
         #$AndroidAppsByDisplayNameHTML | Out-File "$PSScriptRoot\AndroidAppsByDisplayNameHTML.html"
@@ -857,7 +893,7 @@ try {
         # Create grouping colors by id attribute
         $iOSAppsByDisplayName = Create-GroupingRowColors $iOSAppsByDisplayName 'id'
 
-        $PreContent = "<h2 id=`"iOSAppsSortedByAppdisplayName`">iOS App Assignments sorted with App displayName</h2>"
+        $PreContent = "<h2 id=`"iOSAppsSortedByAppdisplayName`">iOS Apps Assignments by AppName</h2>"
         $iOSAppsByDisplayNameHTML = $iOSAppsByDisplayName | ConvertTo-Html -Fragment -PreContent $PreContent | Out-String
 
         # Fix &lt; &quot; etc...
@@ -866,6 +902,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold DisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $iOSAppsByDisplayNameHTML = Change-HTMLTableSyntaxWithRegexpForAppsSortedByDisplayName $iOSAppsByDisplayNameHTML
+
+        # Fix column names and remove c column
+        $iOSAppsByDisplayNameHTML = Fix-HTMLColumns $iOSAppsByDisplayNameHTML
 
         # Debug- save $html1 to file
         #$iOSAppsByDisplayNameHTML | Out-File "$PSScriptRoot\iOSAppsByDisplayNameHTML.html"
@@ -879,7 +918,7 @@ try {
         # Create grouping colors by id attribute
         $macOSAppsByDisplayName = Create-GroupingRowColors $macOSAppsByDisplayName 'id'
 
-        $PreContent = "<h2 id=`"macOSAppsSortedByAppdisplayName`">macOS App Assignments sorted with App displayName</h2>"
+        $PreContent = "<h2 id=`"macOSAppsSortedByAppdisplayName`">macOS Apps Assignments by AppName</h2>"
         $macOSAppsByDisplayNameHTML = $macOSAppsByDisplayName | ConvertTo-Html -Fragment -PreContent $PreContent | Out-String
 
         # Fix &lt; &quot; etc...
@@ -888,6 +927,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold DisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $macOSAppsByDisplayNameHTML = Change-HTMLTableSyntaxWithRegexpForAppsSortedByDisplayName $macOSAppsByDisplayNameHTML
+
+        # Fix column names and remove c column
+        $macOSAppsByDisplayNameHTML = Fix-HTMLColumns $macOSAppsByDisplayNameHTML
 
         # Debug- save $html1 to file
         #$macOSAppsByDisplayNameHTML | Out-File "$PSScriptRoot\macOSAppsByDisplayNameHTML.html"
@@ -901,7 +943,7 @@ try {
         # Create grouping colors by id attribute
         $WebAppsByDisplayName = Create-GroupingRowColors $WebAppsByDisplayName 'id'
 
-        $PreContent = "<h2 id=`"WebAppsSortedByAppdisplayName`">Web App Assignments sorted with App displayName</h2>"
+        $PreContent = "<h2 id=`"WebAppsSortedByAppdisplayName`">Web Apps Assignments by AppName</h2>"
         $WebAppsByDisplayNameHTML = $WebAppsByDisplayName | ConvertTo-Html -Fragment -PreContent $PreContent | Out-String
 
         # Fix &lt; &quot; etc...
@@ -910,6 +952,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold DisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $WebAppsByDisplayNameHTML = Change-HTMLTableSyntaxWithRegexpForAppsSortedByDisplayName $WebAppsByDisplayNameHTML
+
+        # Fix column names and remove c column
+        $WebAppsByDisplayNameHTML = Fix-HTMLColumns $WebAppsByDisplayNameHTML
 
         # Debug- save $html1 to file
         #$WebAppsByDisplayNameHTML | Out-File "$PSScriptRoot\WebAppsByDisplayNameHTML.html"
@@ -944,7 +989,7 @@ try {
         # Create grouping colors by id attribute
         $OtherAppsByDisplayName = Create-GroupingRowColors $OtherAppsByDisplayName 'id'
 
-        $PreContent = "<h2 id=`"OtherAppsSortedByAppdisplayName`">Other App Assignments sorted with App displayName</h2>"
+        $PreContent = "<h2 id=`"OtherAppsSortedByAppdisplayName`">Other Apps Assignments by AppName</h2>"
         $OtherAppsByDisplayNameHTML = $OtherAppsByDisplayName | ConvertTo-Html -Fragment -PreContent $PreContent | Out-String
 
         # Fix &lt; &quot; etc...
@@ -953,6 +998,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold DisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $OtherAppsByDisplayNameHTML = Change-HTMLTableSyntaxWithRegexpForAppsSortedByDisplayName $OtherAppsByDisplayNameHTML
+
+        # Fix column names and remove c column
+        $OtherAppsByDisplayNameHTML = Fix-HTMLColumns $OtherAppsByDisplayNameHTML
 
         # Debug- save $html1 to file
         #$OtherAppsByDisplayNameHTML | Out-File "$PSScriptRoot\OtherAppsByDisplayNameHTML.html"
@@ -966,7 +1014,7 @@ try {
         $htmlObjectAllAppsSortedByAssignmentTargetGroupDisplayName = Create-GroupingRowColors $htmlObjectAllAppsSortedByAssignmentTargetGroupDisplayName 'assignmentTargetGroupDisplayName'
 
         # Working
-        $htmlAllAppsSortedByAssignmentTargetGroupDisplayName = $htmlObjectAllAppsSortedByAssignmentTargetGroupDisplayName | ConvertTo-Html -Fragment -PreContent "<h2 id=`"AllAppsSortedByAssignmentTargetGroupDisplayName`">App Assignments sorted with assignmentTargetGroupDisplayName</h2>" | Out-String
+        $htmlAllAppsSortedByAssignmentTargetGroupDisplayName = $htmlObjectAllAppsSortedByAssignmentTargetGroupDisplayName | ConvertTo-Html -Fragment -PreContent "<h2 id=`"AllAppsSortedByAssignmentTargetGroupDisplayName`">Apps Assignments by target group</h2>" | Out-String
 
         # Fix html syntax
         $htmlAllAppsSortedByAssignmentTargetGroupDisplayName = Fix-HTMLSyntax $htmlAllAppsSortedByAssignmentTargetGroupDisplayName
@@ -974,6 +1022,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold AssignmentTargetGroupDisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $htmlAllAppsSortedByAssignmentTargetGroupDisplayName = Change-HTMLTableSyntaxWithRegexpForAppsSortedByAssignmentTargetGroupDisplayName $htmlAllAppsSortedByAssignmentTargetGroupDisplayName
+
+        # Fix column names and remove c column
+        $htmlAllAppsSortedByAssignmentTargetGroupDisplayName = Fix-HTMLColumns $htmlAllAppsSortedByAssignmentTargetGroupDisplayName
 
         # Debug- save $htmlAllAppsSortedByAssignmentTargetGroupDisplayName to file
         #$htmlAllAppsSortedByAssignmentTargetGroupDisplayName | Out-File "$PSScriptRoot\htmlAllAppsSortedByAssignmentTargetGroupDisplayName.html"
@@ -1110,11 +1161,12 @@ catch {
     Write-Error "$($_.Exception.Message)"
 }
 
+
 # SIG # Begin signature block
 # MIIh1wYJKoZIhvcNAQcCoIIhyDCCIcQCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUqBK5tjdqdYVHjEs/eM0VnFud
-# T6Cggh1EMIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUodo89oY50Fsxd8QyCrdaviYY
+# 9Baggh1EMIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0B
 # AQUFADBsMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYD
 # VQQLExB3d3cuZGlnaWNlcnQuY29tMSswKQYDVQQDEyJEaWdpQ2VydCBIaWdoIEFz
 # c3VyYW5jZSBFViBSb290IENBMB4XDTA2MTExMDAwMDAwMFoXDTMxMTExMDAwMDAw
@@ -1274,22 +1326,22 @@ catch {
 # EwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xKzApBgNV
 # BAMTIkRpZ2lDZXJ0IEVWIENvZGUgU2lnbmluZyBDQSAoU0hBMikCEAUG5H2KdjT9
 # x1uqSw6YRjgwCQYFKw4DAhoFAKBAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEE
-# MCMGCSqGSIb3DQEJBDEWBBQVkQdQZJKOHYWsilNJixDEmFSxfDANBgkqhkiG9w0B
-# AQEFAASCAQAO5JcEet1AC6/K3P3Cla2QIdWGPejpjvQz5rMYH+xaDciNZYHIJb7c
-# +7eDjAn88rhsEfUE0z1YVWM6hZDGpSTb99t2i7dmegC+qlJgjzojRf6ASbTjqp98
-# orS200tgidprnEp875gu7vZjMYsvi9dBp7VgnvEAb3GHIysu0K9mCyIVCEtLTTGN
-# XHd5a+MxL8vJlpXX6IWbDc89bS7kaBsnLQ9Qm6jRVmm3P2TbSWWdNhcZd+4DWSs7
-# at+x15CGoGWkC4CXy9LqgUYvyFiaF+naGtPV7AcT81q0VeGdMpkL7Z91TJAmnZwv
-# K9xyQI643V1LBIe7md/YmJV7sJXWi8ayoYICDzCCAgsGCSqGSIb3DQEJBjGCAfww
+# MCMGCSqGSIb3DQEJBDEWBBQrolBi+obHAqhvZ3DeGs60VtV7NDANBgkqhkiG9w0B
+# AQEFAASCAQBD8BYOa5VKYl6RLPFNTDyF96aS2oOPoYvOXfyMR5ibw3PUladFAZbn
+# xhnOiyI7YooRTl9C7/MqlAy6+67pRf5EZRm6T5QQG6hzzO+fnA3UAxI1Vmmmi+CC
+# +EtwfsrxobwmyBof2M1VXLF/n2rix7X3hPv8c1TkAiMmUTssMQh27bEb4YtjyZqZ
+# NkKWeWnCyjDvwMrA6Fsuvi9ydQ/8a9Bs4MeHguW6T2+dg0tZy9env876+nbBBRaU
+# qp5NXrUAtGuFGdY+By+fEDQZad7DlFQ63QNUKuYjsqqBDnSmaUrM/H9rBrmm5Rlr
+# QB5z7ftuJFbFZrIZeD9otSr1NuGLBYGtoYICDzCCAgsGCSqGSIb3DQEJBjGCAfww
 # ggH4AgEBMHYwYjELMAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0IEluYzEZ
 # MBcGA1UECxMQd3d3LmRpZ2ljZXJ0LmNvbTEhMB8GA1UEAxMYRGlnaUNlcnQgQXNz
 # dXJlZCBJRCBDQS0xAhADAZoCOv9YsWvW1ermF/BmMAkGBSsOAwIaBQCgXTAYBgkq
-# hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0xOTExMjYyMDU4
-# MjVaMCMGCSqGSIb3DQEJBDEWBBTbOuxCc+rI/457ds+bNThFsvpWezANBgkqhkiG
-# 9w0BAQEFAASCAQBATpdQrQlbLxPCPHBZ+EaYQNU6EJr6DiIrWzunmFEp4C3Ne/o0
-# XVz+/USfzrA8d72ZWbFYq7dvMydG8Rxyr3XZGfJkLHnbeVzKq0Y/T23qMzteJdc/
-# UXaR90u21Zm5uM6opSTk3Mrg5PppUPynLoKLMbXho4Kre7fQyydPR8hEzq5aZtaK
-# qduQuot2sdwYojY52XgwQ2NcWF4XLQ8M+tbMwDzD8PCazyVFGXm/lB8/stVwIPRV
-# DO4N+PE8yDhgSPtBHk7U38ub3pNPuOEwS87UecXN3bVzQZQ9bE0TDbszV+NlUmf2
-# uTX+ndHkPjy4IzpZBeE3pQAo1t5BTa7kMk2b
+# hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yMDAzMzExMzQy
+# NDZaMCMGCSqGSIb3DQEJBDEWBBRznaQGlzvGVO6/O51kdk0FTbChnDANBgkqhkiG
+# 9w0BAQEFAASCAQAG82BcMMORRmngodHBhj0t3ZihbT88AXYhxKFfQRggkJNneZY6
+# M60qjm2FR8UwzxXzug5xeDdvZJx0AqS1iu3OzdjE9F4k1GVxso7HoTICQN3JgqbS
+# R0MdLNToxK/MOQGSnSERjZSgaCZkKMYRnBYThOrckQXDtZTbHzhszal38U4I/TFo
+# Vf4qlJAGcBqXSx5pihkKkyR4WZd+DQhvaNRng7GIwDpqORz45y/jlBCfOKPiYmGX
+# 7Oe0GzwMAIFipewaBxlZPUaAqxLojmp5bVvL6aw3grJAM2YwhrmTTN/o7pQCrHHh
+# xmB3Vi3Xvs5jSdH7OGZ1BeKUhDMS1CTjo9Ji
 # SIG # End signature block
