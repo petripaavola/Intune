@@ -1,7 +1,7 @@
 # Create HTML Report from all Intune Configuration Assignments for devices
 #
 # Petri.Paavola@yodamiitti.fi
-# Microsoft MVP
+# Microsoft MVP - Windows and Devices for IT
 # 20200330
 #
 # https://github.com/petripaavola/Intune
@@ -29,7 +29,7 @@ Param(
     [Switch]$IncludeIdsInReport
 )
 
-$ScriptVersion = "ver 1.6"
+$ScriptVersion = "ver 1.61"
 
 
 function Verify-IntuneModuleExistence {
@@ -150,6 +150,24 @@ function Fix-HTMLSyntax {
     return $html
 }
 
+function Fix-HTMLColumns {
+    Param(
+        $html
+    )
+
+    # Remove c column
+    $html = $html -replace '<th>c</th>',''
+    $html = $html -replace '<th>@odata.type</th>','<th>Profile type</th>'
+    $html = $html -replace '<th>displayname</th>','<th>Profile name</th>'
+    $html = $html -replace '<th>assignmentIntent</th>','<th>Assignment Intent</th>'
+    $html = $html -replace '<th>assignmentTargetGroupDisplayName</th>','<th>Target Group</th>'
+    $html = $html -replace '<th>createdDateTime</th>','<th>Created</th>'
+    $html = $html -replace '<th>lastModifiedDateTime</th>','<th>Modified</th>'
+
+    return $html
+}
+
+
 function Create-GroupingRowColors {
     Param(
         $htmlObject,
@@ -227,7 +245,10 @@ function Change-HTMLTableSyntaxWithRegexpForConfigurationsSortedByDisplayName {
         }
 
         # This is returned from MatchEvaluator
-        "<tr bgcolor=`"$RowColor`"><td></td><td>$odatatype</td><td style=`"font-weight:bold`">$ConfigurationDisplayName</font></td>$IntentTD<td>$assignmentTargetGroupDisplayName</td>$($match.Groups[15].Value)</td><td>$id</td></tr>"
+        #"<tr bgcolor=`"$RowColor`"><td></td><td>$odatatype</td><td style=`"font-weight:bold`">$ConfigurationDisplayName</font></td>$IntentTD<td>$assignmentTargetGroupDisplayName</td>$($match.Groups[15].Value)</td><td>$id</td></tr>"
+
+        # Removed column c
+        "<tr bgcolor=`"$RowColor`"><td>$odatatype</td><td style=`"font-weight:bold`">$ConfigurationDisplayName</font></td>$IntentTD<td>$assignmentTargetGroupDisplayName</td>$($match.Groups[15].Value)</td><td>$id</td></tr>"
     }
 
     # $html1 is now single string object with multiple lines separated by newline
@@ -292,7 +313,10 @@ function Change-HTMLTableSyntaxWithRegexpForConfigurationProfilesSortedByAssignm
         }
 
         # This is returned from MatchEvaluator
-        "<tr bgcolor=`"$RowColor`"><td></td><td>$odatatype</td><td>$ConfigurationDisplayName</td>$IntentTD<td style=`"font-weight:bold`">$assignmentTargetGroupDisplayName</font></td><td>$createdDateTime</td><td>$lastModifiedDateTime</td><td>$id</td></tr>"
+        #"<tr bgcolor=`"$RowColor`"><td></td><td>$odatatype</td><td>$ConfigurationDisplayName</td>$IntentTD<td style=`"font-weight:bold`">$assignmentTargetGroupDisplayName</font></td><td>$createdDateTime</td><td>$lastModifiedDateTime</td><td>$id</td></tr>"
+
+        # Remove column c
+        "<tr bgcolor=`"$RowColor`"><td>$odatatype</td><td>$ConfigurationDisplayName</td>$IntentTD<td style=`"font-weight:bold`">$assignmentTargetGroupDisplayName</font></td><td>$createdDateTime</td><td>$lastModifiedDateTime</td><td>$id</td></tr>"
     }
 
     # $html1 is now single string object with multiple lines separated by newline
@@ -1049,7 +1073,7 @@ try {
         # Create grouping colors by assignmentTargetGroupDisplayName attribute
         #$WindowsConfigurationsByDisplayName = Create-GroupingRowColors $WindowsConfigurationsByDisplayName 'displayName'
 
-        $PreContent = "<h2 id=`"WindowsConfigurationsSortedByConfigurationdisplayName`">Windows Configuration Assignments sorted with Configuration profile displayName</h2>"
+        $PreContent = "<h2 id=`"WindowsConfigurationsSortedByConfigurationdisplayName`">Windows configuration assignments by profile</h2>"
         $WindowsConfigurationsByDisplayNameHTML = $WindowsConfigurationsByDisplayName | ConvertTo-Html -Fragment -PreContent $PreContent | Out-String
 
         # Fix &lt; &quot; etc...
@@ -1058,6 +1082,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold DisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $WindowsConfigurationsByDisplayNameHTML = Change-HTMLTableSyntaxWithRegexpForConfigurationsSortedByDisplayName $WindowsConfigurationsByDisplayNameHTML
+
+        # Fix column names and remove c column
+        $WindowsConfigurationsByDisplayNameHTML = Fix-HTMLColumns $WindowsConfigurationsByDisplayNameHTML
 
         ######
         
@@ -1070,7 +1097,7 @@ try {
         # Create grouping colors by assignmentTargetGroupDisplayName attribute
         #$AndroidConfigurationsByDisplayName = Create-GroupingRowColors $AndroidConfigurationsByDisplayName 'displayName'
 
-        $PreContent = "<h2 id=`"AndroidConfigurationsSortedByConfigurationdisplayName`">Android Configuration Assignments sorted with Configuration profile displayName</h2>"
+        $PreContent = "<h2 id=`"AndroidConfigurationsSortedByConfigurationdisplayName`">Android configuration assignments by profile</h2>"
         $AndroidConfigurationsByDisplayNameHTML = $AndroidConfigurationsByDisplayName | ConvertTo-Html -Fragment -PreContent $PreContent | Out-String
 
         # Fix &lt; &quot; etc...
@@ -1079,6 +1106,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold DisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $AndroidConfigurationsByDisplayNameHTML = Change-HTMLTableSyntaxWithRegexpForConfigurationsSortedByDisplayName $AndroidConfigurationsByDisplayNameHTML
+
+        # Fix column names and remove c column
+        $AndroidConfigurationsByDisplayNameHTML = Fix-HTMLColumns $AndroidConfigurationsByDisplayNameHTML
 
         ######
         
@@ -1091,7 +1121,7 @@ try {
         # Create grouping colors by assignmentTargetGroupDisplayName attribute
         #$iOSConfigurationsByDisplayName = Create-GroupingRowColors $iOSConfigurationsByDisplayName 'displayName'
 
-        $PreContent = "<h2 id=`"iOSConfigurationsSortedByConfigurationdisplayName`">iOS Configuration Assignments sorted with Configuration profile displayName</h2>"
+        $PreContent = "<h2 id=`"iOSConfigurationsSortedByConfigurationdisplayName`">iOS configuration assignments by profile</h2>"
         $iOSConfigurationsByDisplayNameHTML = $iOSConfigurationsByDisplayName | ConvertTo-Html -Fragment -PreContent $PreContent | Out-String
 
         # Fix &lt; &quot; etc...
@@ -1100,6 +1130,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold DisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $iOSConfigurationsByDisplayNameHTML = Change-HTMLTableSyntaxWithRegexpForConfigurationsSortedByDisplayName $iOSConfigurationsByDisplayNameHTML
+
+        # Fix column names and remove c column
+        $iOSConfigurationsByDisplayNameHTML = Fix-HTMLColumns $iOSConfigurationsByDisplayNameHTML
 
         ######
         
@@ -1112,7 +1145,7 @@ try {
         # Create grouping colors by assignmentTargetGroupDisplayName attribute
         #$macOSConfigurationsByDisplayName = Create-GroupingRowColors $macOSConfigurationsByDisplayName 'displayName'
 
-        $PreContent = "<h2 id=`"macOSConfigurationsSortedByConfigurationdisplayName`">macOS Configuration Assignments sorted with Configuration profile displayName</h2>"
+        $PreContent = "<h2 id=`"macOSConfigurationsSortedByConfigurationdisplayName`">macOS configuration assignments by profile</h2>"
         $macOSConfigurationsByDisplayNameHTML = $macOSConfigurationsByDisplayName | ConvertTo-Html -Fragment -PreContent $PreContent | Out-String
 
         # Fix &lt; &quot; etc...
@@ -1121,6 +1154,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold DisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $macOSConfigurationsByDisplayNameHTML = Change-HTMLTableSyntaxWithRegexpForConfigurationsSortedByDisplayName $macOSConfigurationsByDisplayNameHTML
+
+        # Fix column names and remove c column
+        $macOSConfigurationsByDisplayNameHTML = Fix-HTMLColumns $macOSConfigurationsByDisplayNameHTML
 
         ######################
         # Other configuration profile types
@@ -1146,7 +1182,7 @@ try {
         # Create grouping colors by id attribute
         $OtherConfigurationsByDisplayName = Create-GroupingRowColors $OtherConfigurationsByDisplayName 'id'
 
-        $PreContent = "<h2 id=`"OtherConfigurationsSortedByConfigurationdisplayName`">Other Configuration Assignments sorted with Configuration Profile displayName</h2>"
+        $PreContent = "<h2 id=`"OtherConfigurationsSortedByConfigurationdisplayName`">Other configuration assignments by profile</h2>"
         $OtherConfigurationsByDisplayNameHTML = $OtherConfigurationsByDisplayName | ConvertTo-Html -Fragment -PreContent $PreContent | Out-String
 
         # Fix &lt; &quot; etc...
@@ -1155,6 +1191,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold DisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $OtherConfigurationsByDisplayNameHTML = Change-HTMLTableSyntaxWithRegexpForConfigurationsSortedByDisplayName $OtherConfigurationsByDisplayNameHTML
+
+        # Fix column names and remove c column
+        $OtherConfigurationsByDisplayNameHTML = Fix-HTMLColumns $OtherConfigurationsByDisplayNameHTML
 
         ######################
         # All Configurations sorted by assignmentTargetGroupDisplayName
@@ -1175,7 +1214,7 @@ try {
         $htmlObjectAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName = Create-GroupingRowColors $htmlObjectAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName 'assignmentTargetGroupDisplayName'
 
         # Working
-        $htmlAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName = $htmlObjectAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName | ConvertTo-Html -Fragment -PreContent "<h2 id=`"AllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName`">Device Configurations Assignments sorted with assignmentTargetGroupDisplayName</h2>" | Out-String
+        $htmlAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName = $htmlObjectAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName | ConvertTo-Html -Fragment -PreContent "<br><hr><h2 id=`"AllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName`">Profile assignments by target group</h2>" | Out-String
 
         # Fix html syntax
         $htmlAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName = Fix-HTMLSyntax $htmlAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName
@@ -1183,6 +1222,9 @@ try {
         # Change HTML Table TD values with regexp
         # We bold AssignmentTargetGroupDisplayName, set Intent TD backgroundcolor and set grouped row coloring
         $htmlAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName = Change-HTMLTableSyntaxWithRegexpForConfigurationProfilesSortedByAssignmentTargetGroupDisplayName $htmlAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName
+
+        # Fix column names and remove c column
+        $htmlAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName = Fix-HTMLColumns $htmlAllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName
 
     }
     catch {
@@ -1216,7 +1258,7 @@ try {
         &nbsp;&nbsp;&nbsp;<strong>Tenant name:</strong> $TenantDisplayName<br>`
         &nbsp;&nbsp;&nbsp;<strong>Tenant id:</strong> $($ConnectMSGraph.TenantId)`
         </p>`
-        <h3>Configurations sorted by displayName</h3>`
+        <h3>Configurations sorted by profile name</h3>`
         <string>`
         <a href=`"#WindowsConfigurationsSortedByConfigurationdisplayName`">Windows Configurations</a><br>`
         <a href=`"#AndroidConfigurationsSortedByConfigurationdisplayName`">Android Configurations</a><br>`
@@ -1224,7 +1266,7 @@ try {
         <a href=`"#macOSConfigurationsSortedByConfigurationdisplayName`">macOS Configurations</a><br>`
         <a href=`"#OtherConfigurationsSortedByConfigurationdisplayName`">Other Configurations</a><br>`
         </string>`
-        <br><h3><a href=`"#AllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName`">All Configurations Sorted By Assignment Group Name</a></h3></td>`
+        <br><h3><a href=`"#AllDeviceConfigurationsSortedByAssignmentTargetGroupDisplayName`">All configurations sorted by target group name</a></h3></td>`
         <!-- <td bgcolor=`"f7f7f4`" valign=`"top`" align=`"center`" border=`"5`">$AllConfigurationProfilesSummaryHTML</td> -->`
         <!-- <td bgcolor=`"f7f7f4`" valign=`"top`" border=`"5`"> -->`
         <td>$AllConfigurationProfilesSummaryHTML</td>`
@@ -1313,11 +1355,12 @@ catch {
     Write-Error "$($_.Exception.Message)"
 }
 
+
 # SIG # Begin signature block
 # MIIh1wYJKoZIhvcNAQcCoIIhyDCCIcQCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUbUBx/fY4l/AAtYFAnzY43vHB
-# Qiyggh1EMIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUVNR2mRNDJ+Wtb5tOicETFQOG
+# 5Miggh1EMIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0B
 # AQUFADBsMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYD
 # VQQLExB3d3cuZGlnaWNlcnQuY29tMSswKQYDVQQDEyJEaWdpQ2VydCBIaWdoIEFz
 # c3VyYW5jZSBFViBSb290IENBMB4XDTA2MTExMDAwMDAwMFoXDTMxMTExMDAwMDAw
@@ -1477,22 +1520,22 @@ catch {
 # EwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xKzApBgNV
 # BAMTIkRpZ2lDZXJ0IEVWIENvZGUgU2lnbmluZyBDQSAoU0hBMikCEAUG5H2KdjT9
 # x1uqSw6YRjgwCQYFKw4DAhoFAKBAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEE
-# MCMGCSqGSIb3DQEJBDEWBBSE1iHIoDdmFyp6VSpCfRDDVX1AaDANBgkqhkiG9w0B
-# AQEFAASCAQCE2zQTYaYHpA0GP9DtOU37UxiRvNoHAiUKPj8rogzDSTks/0GreZSU
-# U0kAhGWEI5nc9hfniOPnmy4Ckc6w+fwE/lR7aioqQzdT/SPJ9reEdeDx6z3Eo48z
-# M3itHXIwE0qsqCRw9b/hd4QUSiiQR6zKvpAI0VXFZAGN+hbdsLFiPP7KNevHbipv
-# KatFovorXt6AgkfkrxsSaQK/gvjRQsMbs7/arQBmyanlr1WJeIc4OWsVfgmTt64P
-# DoRmoZvlf2VlJQUBgnruzd1QwFy2d8r/MTuCkuO7VJFgL3wdZm73L9sZ2IgDO2DP
-# c5ElIL8f/HHZKBuKxvvb18ffSC4hf9KRoYICDzCCAgsGCSqGSIb3DQEJBjGCAfww
+# MCMGCSqGSIb3DQEJBDEWBBSsFrIi3jOxZBjLGDgJ2ZBwfT47sDANBgkqhkiG9w0B
+# AQEFAASCAQAKgQK9Fua6vAQZXGXw+6+q29rleONkXUYntVhGopWGd+haEhs/IjzH
+# 0hDDmBpiJDFtmriYC5HG4rbEbT2SY7IZtBXclh6AJC5rHn8KSYjWw4qp4WatfPok
+# A1p1xNdoDnmrmTVFBlyM1FD1t4sd937h2jLvq5ehUrPJxfuS1e3rMA3eOTyY/naw
+# DAxYo6KbKVBDE/DAib4ITdZPp5/bZFaLVwJgxh8pdCOiMIki8NMC1I40VLUZpNGK
+# xTU+nVVxR2vYg3co5YpES0yPDekdRWRBh7DHeCJFfbU5GiCBUl3kIVQ0sgGadKS0
+# wgtxVyCUZt5jydOWE3hZiEuti9/ItuWqoYICDzCCAgsGCSqGSIb3DQEJBjGCAfww
 # ggH4AgEBMHYwYjELMAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0IEluYzEZ
 # MBcGA1UECxMQd3d3LmRpZ2ljZXJ0LmNvbTEhMB8GA1UEAxMYRGlnaUNlcnQgQXNz
 # dXJlZCBJRCBDQS0xAhADAZoCOv9YsWvW1ermF/BmMAkGBSsOAwIaBQCgXTAYBgkq
-# hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yMDAzMzAxODI3
-# NDRaMCMGCSqGSIb3DQEJBDEWBBSDbjXSsq7XdlRr0STbfU1WBUIW9TANBgkqhkiG
-# 9w0BAQEFAASCAQAjUrj9X9eo7GtZhI/qJQrG3RBpiVd73dWjoOZxwMnmcfliHzYw
-# qEkOlXx8EJyJTtalXSnp15qphtN4yfy+FsrafQBIbkIeZbayO9EZcY49lZrfs2mg
-# m1MJ1cwjv33iE5PJRToGZlw4rMNtEjCE34HeenO52e0aSmSXTmnGF3fJxvMjEnp8
-# b/F4+PHwLUNGhR+6viX7CdxAgyX6+l62veHOnFfuvuHqDd37poxHdA8/ZVW0xpLM
-# ZIDZG3HDjRKa37XyRC70fjkZ3kt2qL+aCsqB1Jz4Kpu5tgSGJ1/JVnqQs5y/xIsx
-# 9zHuev7raELxivc1+EmtdA2TDzqQ3hHnKnVO
+# hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yMDAzMzExMDQ0
+# MDlaMCMGCSqGSIb3DQEJBDEWBBTImEPn5EQFEekFv4uZwT4IqFjy6zANBgkqhkiG
+# 9w0BAQEFAASCAQAEj7CWz01LexOz2HHOknDBxXWAkebXuegtmnxpipH/FxWpVdZl
+# 1bWl+vrDkzf/2ipF8V3CemockEqv1DPmHu42pAccLBE6CrJSR/QmnjBZnWrpZdkj
+# dS+j0zzEh3i5KNffRIiLD4nT6Dlx0Pir3pCHXjZ7PpgddYSKlnz20sCcKQa7EMOJ
+# Qn1iE5O84lVb5D/aow4k4fYCzL3XqX37GD8D5t6bUOFlNpAIbt8Zr369TaEQJxef
+# MWWP2pEo7kDMYSGL+ziJ2da2kHm2ajKiAz4lMpiutEpkuOZLuqvltJvZuCubJTyf
+# D+DbHn/Z9IzvsiAxVhI25N+e55ao5L1XAQP8
 # SIG # End signature block
