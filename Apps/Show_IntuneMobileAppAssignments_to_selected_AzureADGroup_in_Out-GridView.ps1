@@ -2,28 +2,35 @@
 # Uses Out-GridView to show GUI to select AzureADGroup and App(s)
 #
 # Petri.Paavola@yodamiitti.fi
-# 20191121
+# Microsoft MVP - Windows and Devices for IT
+#
+# 27.4.2021
 
 
 ######
+
+# Update Graph API schema to beta to get Win32LobApps and possible other new features also
+Update-MSGraphEnvironment -SchemaVersion 'beta'
+
+$MSGraphEnvironment = Connect-MSGraph
+$Success = $?
+
+if (-not $Success) {
+	Write-Error "Error connecting to Intune!"
+	Exit 1
+}
 
 # Get AzureAD groups and show them in Out-GridView. User can select only 1 group
 
 # Notice we probably get only part of groups because GraphAPI returns limited number of groups
 $groups = Get-AADGroup -Filter 'securityEnabled eq true'
 
-# Get-AADGroup usually returns GraphAPI @odata.nextlink because there are so many groups that we get paged result
-# @odata.context                                    @odata.nextLink
-# --------------                                    -------------- -
-# https://graph.microsoft.com/v1.0/$metadata#groups https://graph.microsoft.com/v1.0/groups?$top=100&$skiptoken=X%274453...
+# Quick workaround to get all Security Groups and also get actual objects and not .Value -attribute
+$AllGroups = Get-MSGraphAllPages -SearchResult $groups
 
-# Check if we have value starting https:// in attribute @odate.nextLink
-# If we have nextLink then we get all groups
-if ($groups.'@odata.nextLink' -like "https://*") {
-    # Get all groups because we got paged result
-    $AllGroups = Get-MSGraphAllPages -SearchResult $groups
-} else {
-    $AllGroups = $groups
+if(-not $AllGroups) {
+	Write-Error "Could not find any AzureAD Groups!"
+	Exit 1
 }
 
 # Show AzureAD groups in Out-GridView with selected properties and save selected AzureADGroup to variable
@@ -37,24 +44,19 @@ if (-not $SelectedAzureADGroup) { Write-Output "No groups selected, exiting...";
 
 # Get App information and show Apps in Out-GridView
 
-# Update to Graph API beta to get Win32LobApps too
-Update-MSGraphEnvironment -SchemaVersion 'beta'
-Connect-MSGraph
-
 # We need assignments info so -Expand assignment option is needed here
 $Apps = Get-DeviceAppManagement_MobileApps -Expand assignments
 
-# Check if we have value starting https:// in attribute @odate.nextLink
-# If we have nextLink then we get all Apps
-if ($Apps.'@odata.nextLink' -like "https://*") {
-    # Get all Apps because we got paged result
-    $AllApps = Get-MSGraphAllPages -SearchResult $Apps
-} else {
-    $AllApps = $Apps
+# Quick workaround to get all Apps and also get actual objects and not .Value -attribute
+$AllApps = Get-MSGraphAllPages -SearchResult $Apps
+
+if(-not $AllApps) {
+	Write-Error "Could not find any Intune Apps!"
+	Exit 1
 }
 
 # Find apps which have assignments to our selected AzureAD Group id
-# Check data syntax from GraphAPI with request: https://graph.microsoft.com/beta/deviceAppManagement/mobileApps?$expand=assignments
+# Check data syntax from GraphAPI with request: https://graph.microsoft.com/v1.0/deviceAppManagement/mobileApps?$expand=assignments
 # or convert $Apps to json to get more human readable format: $Apps | ConvertTo-JSON
 $AppsWithAssignmentToSelectedGroup = $AllApps | Where-Object { $_.assignments.target.groupid -eq $SelectedAzureADGroup.id }
 
@@ -71,8 +73,11 @@ $AppsWithAssignmentInformation = @()
 Foreach ($App in $AppsWithAssignmentToSelectedGroup) {
     $Assignment = $App.Assignments | Where-Object { $_.target.groupid -eq $SelectedAzureADGroup.id }
 
+	if($App.vppTokenAppleId) { $vppTokenAppleId = $App.vppTokenAppleId} else { $vppTokenAppleId = $null }
+
     $properties = @{
         '@odata.type'                    = $App.'@odata.type'
+		vppTokenAppleId					 = $vppTokenAppleId
         displayname                      = $App.displayname
         productVersion                   = $App.productVersion
         publisher                        = $App.publisher
@@ -97,4 +102,4 @@ Foreach ($App in $AppsWithAssignmentToSelectedGroup) {
 
 
 # Show Apps in Out-GridView
-$SelectedApps = $AppsWithAssignmentInformation | Select '@odata.type', displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id, assignmentId, assignmentTargetGroupId | Sort displayName | Out-GridView -Title "Found these App Assignment for AzureADGroup: $($SelectedAzureADGroup.displayName)"
+$SelectedApps = $AppsWithAssignmentInformation | Select '@odata.type', vppTokenAppleId, displayName, assignmentIntent, assignmentTargetGroupDisplayName, publisher, productVersion, filename, createdDateTime, lastModifiedDateTime, id, assignmentId, assignmentTargetGroupId | Sort displayName | Out-GridView -Title "Found these App Assignment for AzureADGroup: $($SelectedAzureADGroup.displayName)"
