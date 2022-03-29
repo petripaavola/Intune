@@ -3,7 +3,7 @@ Reports which we don't have in Intune (at least at this time)
 
 Quick links to reports:
 * [Create_IntuneConfigurationAssignments_HTML_Report.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create_IntuneConfigurationAssignments_HTML_Report.ps1)
-* [Create_IntuneMobileAppAssignments_HTML_Report.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create_IntuneMobileAppAssignments_HTML_Report.ps1)
+* [Create_IntuneMobileAppAssignments_HTML_Report_v2.0.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create_IntuneMobileAppAssignments_HTML_Report_v2.0.ps1)
 
 Make sure you have Intune Powershell Cmdlets installed and updated
 
