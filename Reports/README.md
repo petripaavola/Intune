@@ -32,8 +32,8 @@ Platform based tables and quick links
 
 ---
 
-## Create_IntuneMobileAppAssignments_HTML_Report.ps1
-[Create_IntuneMobileAppAssignments_HTML_Report.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create_IntuneMobileAppAssignments_HTML_Report.ps1)
+## Create_IntuneMobileAppAssignments_HTML_Report_v2.0.ps1
+[Create_IntuneMobileAppAssignments_HTML_Report_v2.0.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create_IntuneMobileAppAssignments_HTML_Report_v2.0.ps1)
 
 2 views:
 * Find where single Application is assigned to
