@@ -44,7 +44,7 @@ if ($UseOfflineCache) {
     $DoNotDownloadAppIcons = $true
 }
 
-$ScriptVersion = "ver 1.6"
+$ScriptVersion = "ver 2.0"
 
 
 function Verify-IntuneModuleExistence {
