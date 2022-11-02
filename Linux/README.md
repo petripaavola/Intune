@@ -30,8 +30,9 @@ Be sure NOT to write anything to STDOUT because that will break the compliance c
 
 
 ## Screenshots
-![Intune_Linux_CustomComplianceCheck_RebootRequired_Compliant.png](https://github.com/petripaavola/Intune/blob/master/Linux/Intune_Linux_CustomComplianceCheck_RebootRequired_Compliant.png)
-![Intune_Linux_CustomComplianceCheck_RebootRequired_NotCompliant.png](https://github.com/petripaavola/Intune/blob/master/Linux/Intune_Linux_CustomComplianceCheck_RebootRequired_NotCompliant.png)
+![Intune_Linux_CustomComplianceCheck_RebootRequired_Compliant.png](https://github.com/petripaavola/Intune/blob/master/Linux/pics/Intune_Linux_CustomComplianceCheck_RebootRequired_Compliant.png)
+![Intune_Linux_CustomComplianceCheck_RebootRequired_NotCompliant.png](https://github.com/petripaavola/Intune/blob/master/Linux/pics/Intune_Linux_CustomComplianceCheck_RebootRequired_NotCompliant.png)
 
 **Intune Linux Compliance Policy**
-![Intune_Linux_Compliance_Policy.png](https://github.com/petripaavola/Intune/blob/master/Linux/Intune_Linux_Compliance_Policy.png)
+
+![Intune_Linux_Compliance_Policy.png](https://github.com/petripaavola/Intune/blob/master/Linux/pics/Intune_Linux_Compliance_Policy.png)
