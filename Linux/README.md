@@ -2,6 +2,8 @@
 Example scripts how to run Linux Custom Compliance checks with Intune.
 This script is Bash script which includes Powershell script inside.
 
+![Intune_Linux_CustomComplianceCheck_RebootRequired_Compliant_small.png](https://github.com/petripaavola/Intune/blob/master/Linux/pics/Intune_Linux_CustomComplianceCheck_RebootRequired_Compliant_small.png)
+
 ## Quick links to files:
 * [Intune_Linux_Custom_Compliance_script.sh](https://github.com/petripaavola/Intune/blob/master/Linux/Intune_Linux_Custom_Compliance_script.sh)
 * [Intune_Linux_Custom_Compliance_script_Rules_file.json](https://github.com/petripaavola/Intune/blob/master/Linux/Intune_Linux_Custom_Compliance_script_Rules_file.json)
