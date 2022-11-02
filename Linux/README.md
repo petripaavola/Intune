@@ -27,6 +27,7 @@ Be sure NOT to write anything to STDOUT because that will break the compliance c
 ## Requirements
 * Powershell must be installed for this script to work
   * Note! Script does not check existence of Powershell at this time
+  * Check these [Microsoft instructions](https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.2) how to install Powershell to Ubuntu
 * You can create Dynamic Azure AD Group for targeting the Linux Compliance Policy using this rule
   * **(device.deviceOSType -eq "Linux")**
 
