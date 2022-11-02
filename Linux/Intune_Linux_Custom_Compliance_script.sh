@@ -5,7 +5,7 @@
 # which is included in this script
 #
 # Compliance checks:
-#	  Reboot Required check (file should not exist /var/run/reboot-required)
+#	Reboot Required check (file should not exist /var/run/reboot-required)
 #
 #
 # Script creates 2 log files for debugging
@@ -23,9 +23,11 @@
 # Petri.Paavola@yodamiitti.fi
 # Microsoft MVP - Windows and Devices for IT
 # 2.11.2022
+#
+# https://github.com/petripaavola/Intune/tree/master/Linux
 
 
-Version=1.59
+Version=1.60
 BashLogFilePath=/tmp/IntuneCustomComplianceScript_Bash.log
 
 # Create log for debugging
