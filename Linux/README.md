@@ -9,7 +9,10 @@ This script is Bash script which includes Powershell script inside.
 * [Intune_Linux_Custom_Compliance_script_Rules_file.json](https://github.com/petripaavola/Intune/blob/master/Linux/Intune_Linux_Custom_Compliance_script_Rules_file.json)
 
 ## Compliance checks in this script
+* Check Powershell is installed in path /opt/microsoft/powershell/7/pwsh
+* Check Powershell version (7.2.7 current version minimum)
 * Reboot Required check (file should not exist /var/run/reboot-required)
+* Check MSEdge is installed in path /opt/microsoft/msedge/msedge
 
 ## How script works
 Linux Compliance script itself is Bash script because POSIX-compliant shell script is requirement for Intune. However script includes Powershell script and compliance checks are done in Powershell part.
@@ -26,7 +29,7 @@ Be sure NOT to write anything to STDOUT because that will break the compliance c
 
 ## Requirements
 * Powershell must be installed for this script to work
-  * Note! Script does not check existence of Powershell at this time
+  * Script will check existence of Powershell (/opt/microsoft/powershell/7/pwsh)
   * Check these [Microsoft instructions](https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.2) how to install Powershell to Ubuntu
 * You can create Dynamic Azure AD Group for targeting the Linux Compliance Policy using this rule
   * **(device.deviceOSType -eq "Linux")**
