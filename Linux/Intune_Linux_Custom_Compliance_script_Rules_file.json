@@ -1,5 +1,33 @@
 {
 "Rules":[ 
+	{
+       "SettingName":"PowershellInstalled",
+       "Operator":"IsEquals",
+       "DataType":"Boolean",
+       "Operand":true,
+       "MoreInfoUrl":"https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.2",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Powershell not installed",
+             "Description": "Powershell is required with Compliance Checks scripts. Install Powershell and Refresh settings."
+          }
+       ]
+    },
+	{
+       "SettingName":"PSVersion",
+       "Operator":"GreaterEquals",
+       "DataType":"Version",
+       "Operand":"7.2.7",
+       "MoreInfoUrl":"https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.2",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Powershell version is not up to date. Version should be at least 7.2.7",
+             "Description": "Required Powershell version provides tools used with Compliance Checks scripts"
+          }
+       ]
+    },
     { 
        "SettingName":"RebootRequired",
        "Operator":"IsEquals",
@@ -11,6 +39,20 @@
              "Language": "en_US",
              "Title": "Reboot Required detected.",
              "Description": "Computer needs to be rebooted if file /var/run/reboot-required is present"
+          }
+       ]
+    },
+	{
+       "SettingName":"MSEdgeInstalled",
+       "Operator":"IsEquals",
+       "DataType":"Boolean",
+       "Operand":true,
+       "MoreInfoUrl":"https://www.microsoft.com/en-us/edge",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "MSEdge is not installed.",
+             "Description": "MSEdge is used for safe access to company resources."
           }
        ]
     }
