@@ -70,6 +70,10 @@ https://graph.microsoft.com/beta/devicemanagement/manageddevices?$filter=deviceN
 GET
 https://graph.microsoft.com/beta/devicemanagement/manageddevices?$filter=startswith(deviceName,'Win10')
 
+# Search Intune Device by serialNumber
+GET
+https://graph.microsoft.com/beta/devicemanagement/manageddevices?$filter=serialNumber eq '1205-2767-4568-7306-0982-6763-81'
+
 # Get Intune Managed Devices and use Select to get only specified attributes
 GET
 https://graph.microsoft.com/beta/devicemanagement/manageddevices?$select=deviceName,id
