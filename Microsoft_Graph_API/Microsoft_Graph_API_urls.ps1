@@ -33,6 +33,9 @@ https://graph.microsoft.com/beta/users?$select=mail,givenName,surname
 GET
 https://graph.microsoft.com/beta/users?$filter=mail eq 'firstname.lastname@yodamiitti.fi'
 
+# Find user by userPrincipalName
+GET
+https://graph.microsoft.com/beta/users?$filter=userPrincipalName eq 'firstname.lastname@yodamiitti.fi'
 
 # AzureAD Groups
 GET
