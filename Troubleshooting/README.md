@@ -10,7 +10,8 @@ Check Firewall rules configured from Intune
 ```
 Get-NetFirewallRule -PolicyStore ActiveStore | Where-Object { $_.PolicyStoreSource -eq 'Mdm' } | Select-Object -Property DisplayName,Action,Direction
 ```
-
+Firewall configurations and rules registry path is:  
+Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\Mdm
 
 
 #### [Show-IntuneIMELogsInOutGridView.ps1](./Show-IntuneIMELogsInOutGridView.ps1)
