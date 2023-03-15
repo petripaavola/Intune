@@ -48,7 +48,7 @@ Linux custom compliance script runs in user context who enrolled Ubuntu device t
 Be sure NOT to write anything to STDOUT because that will break the compliance check. Only Powershell part of script is allowed to return compressed JSON to STDOUT which is then passed to Intune for custom Compliance Check.
 
 ## Requirements
-* Powershell must be installed for this script to work
+* **Powershell must be installed for this script to work**
   * Script will check existence of Powershell (/opt/microsoft/powershell/7/pwsh)
   * Check these [Microsoft instructions](https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.2) how to install Powershell to Ubuntu
 * You can create Dynamic Azure AD Group for targeting the Linux Compliance Policy using this rule
