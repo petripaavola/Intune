@@ -9,25 +9,25 @@ This script is Bash script which includes Powershell script inside.
 * [Intune_Linux_Custom_Compliance_script_Rules_file.json](https://github.com/petripaavola/Intune/blob/master/Linux/Intune_Linux_Custom_Compliance_script_Rules_file.json)
 
 ## Compliance checks in this version
-*	Powershell is installed
-*	Powershell version (7.3.3 minimum currently configured in json)
-*	Reboot Required check (file should not exist /var/run/reboot-required)
-* MS Edge
+*	**Powershell is installed**
+*	**Powershell version** (7.3.3 minimum currently configured in json)
+*	**Reboot Required check** (file should not exist /var/run/reboot-required)
+* **MS Edge**
   * Check MS Edge is installed (file should exist /opt/microsoft/msedge/msedge)
   *	Check MS Edge version
-* Kernel version
+* **Kernel version**
   *	Check Kernel version (5.19.35-generic minimum currently configured in json)
   *	Check Kernel patch level
   *	Check Kernel flavour
   *	Check Kernel tainted state
-*	SecureBoot status (require SecureBoot configured in json)
-* sysctrl values (placeholder to check any value)
+*	**SecureBoot status** (require SecureBoot configured in json)
+* **sysctrl values** (placeholder to check any value)
   *	user.max_user_namespaces
-* gsettings values  (placeholder to check any value)
+* **gsettings values**  (placeholder to check any value)
   *	org.gnome.desktop.screensaver lock-enabled
   * org.gnome.desktop.screensaver idle-activation-enabled
   * org.gnome.desktop.session idle-delay (10 minutes currently configured in json)
-* Defender for Endpoint on Linux status
+* **Defender for Endpoint on Linux status**
   * MicrosoftDefenderForEndpointOnLinux_Installed
   * MicrosoftDefenderForEndpointOnLinux_RegisteredToOrganization
   * MicrosoftDefenderForEndpointOnLinux_Healthy
