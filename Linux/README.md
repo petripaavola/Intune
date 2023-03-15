@@ -41,7 +41,8 @@ Get-Content -Path .\Intune_Linux_Custom_Compliance_script_Rules_file.json | Conv
 * **gsettings values**  (placeholder to check any value)
   *	org.gnome.desktop.screensaver lock-enabled
   * org.gnome.desktop.screensaver idle-activation-enabled
-  * org.gnome.desktop.session idle-delay (10 minutes currently configured in json)
+  * org.gnome.desktop.session idle-delay
+    * 10 minutes currently configured in json
 * **Defender for Endpoint on Linux status**
   * MicrosoftDefenderForEndpointOnLinux_Installed
   * MicrosoftDefenderForEndpointOnLinux_RegisteredToOrganization
