@@ -1,4 +1,4 @@
-# Intune Linux Custom Compliance scripts 3.0
+# Intune Linux Custom Compliance script 3.0
 Example scripts how to run Linux Custom Compliance checks with Intune.
 This script is Bash script which includes Powershell script inside.
 
