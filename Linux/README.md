@@ -73,12 +73,16 @@ Be sure NOT to write anything to STDOUT because that will break the compliance c
   * On Windows, scripts must take 10 minutes or less to run.
 * Own personal note: script runs in user context who enrolled device to Intune. This might limit being creative and thinking outside the box :)
 
-## Add script to Intune
+## Add script to Microsoft Intune
 In [Microsoft Intune](https://intune.microsoft.com) add Linux Custom Compliance script  
-**Devices -> Compliance policies -> Script -> Add**
+**Devices -> Compliance policies -> Script -> Add**  
+<img src="./pics/IntuneAddLinuxCustomComplianceScript.png" width=50% height=50%>
 
 Then create Linux Compliance Policy and select Custom Compliance from Settings picker  
-**Devices -> Linux -> Compliance policies -> Create policy**
+**Devices -> Linux -> Compliance policies -> Create policy**  
+<img src="./pics/IntuneAddCustomCompliancePolicySettingsPicker.png" width=50% height=50%>  
+
+<img src="./pics/IntuneAddCustomCompliancePolicySelectFiles.png" width=50% height=50%>
 
 ## Screenshots
 ![Intune_Linux_CustomComplianceCheck_RebootRequired_Compliant.png](https://github.com/petripaavola/Intune/blob/master/Linux/pics/Intune_Linux_CustomComplianceCheck_RebootRequired_Compliant.png)
