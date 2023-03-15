@@ -14,7 +14,7 @@ Custom Compliance checks are configured in **.json**-file ([Intune_Linux_Custom_
 
 You can configure, enable and disable custom compliance check settings in json file without even touching to .sh script. For correct json and rule operator syntax it is best to copy existing rule and edit values on that.
 
-You can test json valid syntax with command (red means json is not valid)
+You can validate json syntax with command (red means json is not valid)
 ```
 Get-Content -Path .\Intune_Linux_Custom_Compliance_script_Rules_file.json | ConvertFrom-Json
 ```
