@@ -8,7 +8,16 @@ This script is Bash script which includes Powershell script inside.
 * [Intune_Linux_Custom_Compliance_script.sh](https://github.com/petripaavola/Intune/blob/master/Linux/Intune_Linux_Custom_Compliance_script.sh)
 * [Intune_Linux_Custom_Compliance_script_Rules_file.json](https://github.com/petripaavola/Intune/blob/master/Linux/Intune_Linux_Custom_Compliance_script_Rules_file.json)
 
-## Compliance checks in this version
+## Custom Compliance checks
+Custom Compliance checks are configured in **.json**-file ([Intune_Linux_Custom_Compliance_script_Rules_file.json](https://github.com/petripaavola/Intune/blob/master/Linux/Intune_Linux_Custom_Compliance_script_Rules_file.json))
+
+You can configure, enable and disable custom compliance check settings in json file without even touching to .sh script. For correct json and rule operator syntax it is best to copy existing rule and edit values on that.
+
+You can test json valid syntax with command (red means json is not valid)
+```
+Get-Content -Path .\Intune_Linux_Custom_Compliance_script_Rules_file.json | ConvertFrom-Json
+```
+#### Compliance checks in this version
 *	**Powershell is installed**
 *	**Powershell version** (7.3.3 minimum currently configured in json)
 *	**Reboot Required check** (file should not exist /var/run/reboot-required)
@@ -63,6 +72,13 @@ Be sure NOT to write anything to STDOUT because that will break the compliance c
     * Note! You can find script total runtime from end of log file /tmp/IntuneCustomComplianceScript_Powershell.log
   * On Windows, scripts must take 10 minutes or less to run.
 * Own personal note: script runs in user context who enrolled device to Intune. This might limit being creative and thinking outside the box :)
+
+## Add script to Intune
+In [Microsoft Intune](https://intune.microsoft.com) add Linux Custom Compliance script  
+**Devices -> Compliance policies -> Script -> Add**
+
+Then create Linux Compliance Policy and select Custom Compliance from Settings picker  
+**Devices -> Linux -> Compliance policies -> Create policy**
 
 ## Screenshots
 ![Intune_Linux_CustomComplianceCheck_RebootRequired_Compliant.png](https://github.com/petripaavola/Intune/blob/master/Linux/pics/Intune_Linux_CustomComplianceCheck_RebootRequired_Compliant.png)
