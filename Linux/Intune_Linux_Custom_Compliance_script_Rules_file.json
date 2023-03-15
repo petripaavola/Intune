@@ -18,13 +18,97 @@
        "SettingName":"PSVersion",
        "Operator":"GreaterEquals",
        "DataType":"Version",
-       "Operand":"7.2.7",
+       "Operand":"7.3.3",
        "MoreInfoUrl":"https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.2",
        "RemediationStrings":[ 
           { 
              "Language": "en_US",
-             "Title": "Powershell version is not up to date. Version should be at least 7.2.7",
-             "Description": "Required Powershell version provides tools used with Compliance Checks scripts"
+             "Title": "Powershell version is not up to date.",
+             "Description": "Required Powershell version 7.3.3 provides tools used with Compliance Checks scripts. Update Powershell and Refresh settings."
+          }
+       ]
+    },
+	{
+       "SettingName":"SecureBootEnabled",
+       "Operator":"IsEquals",
+       "DataType":"Boolean",
+       "Operand":true,
+       "MoreInfoUrl":"https://wiki.ubuntu.com/UEFI/SecureBoot",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "SecureBoot is not enabled.",
+             "Description": "SecureBoot needs to enabled to get access to company resources. Enable SecureBoot and Refresh settings."
+          }
+       ]
+    },
+    { 
+       "SettingName":"MicrosoftDefenderForEndpointOnLinux_Installed",
+       "Operator":"IsEquals",
+       "DataType":"Boolean",
+       "Operand":true,
+       "MoreInfoUrl":"https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/microsoft-defender-endpoint-linux",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Your Organization requires Microsoft Defender for Endpoint on Linux devices.",
+             "Description": "Install Defender for Endpoint and try again."
+          }
+       ]
+    },
+    { 
+       "SettingName":"MicrosoftDefenderForEndpointOnLinux_RegisteredToOrganization",
+       "Operator":"IsEquals",
+       "DataType":"Boolean",
+       "Operand":true,
+       "MoreInfoUrl":"https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/microsoft-defender-endpoint-linux",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Your Organization requires Microsoft Defender for Endpoint on Linux devices is registered to your organization.",
+             "Description": "Configure Defender for Endpoint and try again."
+          }
+       ]
+    },
+    { 
+       "SettingName":"MicrosoftDefenderForEndpointOnLinux_Healthy",
+       "Operator":"IsEquals",
+       "DataType":"Boolean",
+       "Operand":true,
+       "MoreInfoUrl":"https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/microsoft-defender-endpoint-linux",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Your Organization requires Microsoft Defender for Endpoint on Linux devices is in healthy state.",
+             "Description": "Configure and/or update Defender for Endpoint and try again."
+          }
+       ]
+    },
+    { 
+       "SettingName":"MicrosoftDefenderForEndpointOnLinux_DefinitionsStatus_up_to_date",
+       "Operator":"IsEquals",
+       "DataType":"Boolean",
+       "Operand":true,
+       "MoreInfoUrl":"https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/microsoft-defender-endpoint-linux",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Your Organization requires Microsoft Defender for Endpoint on Linux devices is updated.",
+             "Description": "Update Defender for Endpoint Definitions and try again."
+          }
+       ]
+    },
+    { 
+       "SettingName":"MicrosoftDefenderForEndpointOnLinux_real_time_protection_enabled",
+       "Operator":"IsEquals",
+       "DataType":"Boolean",
+       "Operand":true,
+       "MoreInfoUrl":"https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/microsoft-defender-endpoint-linux",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Your Organization requires Microsoft Defender for Endpoint on Linux devices has Realtime scan enable.",
+             "Description": "Configure Defender for Endpoint Realtime settings and try again."
           }
        ]
     },
@@ -38,7 +122,7 @@
           { 
              "Language": "en_US",
              "Title": "Reboot Required detected.",
-             "Description": "Computer needs to be rebooted if file /var/run/reboot-required is present"
+             "Description": "Reboot computer and Refresh settings."
           }
        ]
     },
@@ -51,8 +135,120 @@
        "RemediationStrings":[ 
           { 
              "Language": "en_US",
-             "Title": "MSEdge is not installed.",
-             "Description": "MSEdge is used for safe access to company resources."
+             "Title": "Microsoft Edge browser is not installed.",
+             "Description": "Microsoft Edge browser is used for safe access to company resources. Install Microsoft Edge browser and Refresh settings."
+          }
+       ]
+    },
+	{
+       "SettingName":"MSEdgeVersion",
+       "Operator":"GreaterEquals",
+       "DataType":"Version",
+       "Operand":"111.0.1661.41",
+       "MoreInfoUrl":"https://www.microsoft.com/en-us/edge",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Microsoft Edge version is not up to date.",
+             "Description": "Required Microsfot Edge version should be at least 111.0.1661.41. Update Microsoft Edge and Refresh settings."
+          }
+       ]
+    },
+	{
+       "SettingName":"KernelVersion",
+       "Operator":"GreaterEquals",
+       "DataType":"Version",
+       "Operand":"5.19.0",
+       "MoreInfoUrl":"https://www.google.com",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Linux kernel version is not up to date.",
+             "Description": "Required kernel version should be at least 5.19.0. Update your device and Refresh settings."
+          }
+       ]
+    },
+	{
+       "SettingName":"KernelPatchLevel",
+       "Operator":"GreaterEquals",
+       "DataType":"Version",
+       "Operand":"35.0",
+       "MoreInfoUrl":"https://www.google.com",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Linux kernel Patch version is not up to date.",
+             "Description": "Required kernel Patch version should be at least 35. Update your device and Refresh settings."
+          }
+       ]
+    },
+	{
+       "SettingName":"KernelFlavour",
+       "Operator":"IsEquals",
+       "DataType":"String",
+       "Operand":"generic",
+       "MoreInfoUrl":"https://www.microsoft.com/en-us/edge",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Linux kernel flavour is wrong.",
+             "Description": "Kernel flavour should be generic. Change kernel to generic flavour and Refresh settings."
+          }
+       ]
+    },
+	{
+       "SettingName":"TaintedKernelState",
+       "Operator":"IsEquals",
+       "DataType":"Int64",
+       "Operand":0,
+       "MoreInfoUrl":"https://www.kernel.org/doc/html/latest/admin-guide/tainted-kernels.html#decoding-tainted-state-at-runtime",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Linux kernel is in tainted mode.",
+             "Description": "Tainted kernel can cause a lot of problems. NVIDIA or AMD graphics drivers can cause kernel tainted mode. Contact your administrator if you think this is false positive error. Reboot computer and Refresh settings."
+          }
+       ]
+    },
+	{
+       "SettingName":"gsettings get org.gnome.desktop.screensaver lock-enabled",
+       "Operator":"IsEquals",
+       "DataType":"Boolean",
+       "Operand":true,
+       "MoreInfoUrl":"https://help.ubuntu.com/stable/ubuntu-help/privacy-screen-lock.html.en",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Automatic screen lock is not enabled.",
+             "Description": "Screen should lock automatically when screensaver is enabled. Change screen lock setting and Refresh settings."
+          }
+       ]
+    },
+	{
+       "SettingName":"gsettings get org.gnome.desktop.screensaver idle-activation-enabled",
+       "Operator":"IsEquals",
+       "DataType":"Boolean",
+       "Operand":true,
+       "MoreInfoUrl":"https://help.ubuntu.com/stable/ubuntu-help/privacy-screen-lock.html.en",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Automatic Screensaver idle activation not enabled.",
+             "Description": "Enable idle activation lock with command: gsettings set org.gnome.desktop.screensaver idle-activation-enabled true and Refresh settings."
+          }
+       ]
+    },
+	{
+       "SettingName":"gsettings get org.gnome.desktop.session idle-delay",
+       "Operator":"LessEquals",
+       "DataType":"Int64",
+       "Operand":600,
+       "MoreInfoUrl":"https://help.ubuntu.com/stable/ubuntu-help/display-blank.html.en",
+       "RemediationStrings":[ 
+          { 
+             "Language": "en_US",
+             "Title": "Screen Blank timeout over 10 minutes.",
+             "Description": "Screen Blank maximum timeout is 10 minutes. Change Screen Blank timeout setting and Refresh settings."
           }
        ]
     }
