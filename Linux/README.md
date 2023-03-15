@@ -55,6 +55,8 @@ Script creates 2 **log files** for debugging and testing
 
 Linux custom compliance script runs in user context who enrolled Ubuntu device to Intune. You can verify this from log files.
 
+When you upload scripts to Intune they are immediately used in client on next Refresh so you can code and test really quickly.
+
 Be sure NOT to write anything to STDOUT because that will break the compliance check. Only Powershell part of script is allowed to return compressed JSON to STDOUT which is then passed to Intune for custom Compliance Check.
 
 ## Requirements
