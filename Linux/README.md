@@ -18,19 +18,24 @@ You can validate json syntax with command (red means json is not valid)
 ```
 Get-Content -Path .\Intune_Linux_Custom_Compliance_script_Rules_file.json | ConvertFrom-Json
 ```
-#### Compliance checks in this version
-*	**Powershell is installed**
-*	**Powershell version** (7.3.3 minimum currently configured in json)
-*	**Reboot Required check** (file should not exist /var/run/reboot-required)
+## Custom Compliance checks in this version:
+* **Powershell is installed**
+* **Powershell version**
+  * 7.3.3 minimum currently configured in json
+* **Reboot Required check**
+  * file should not exist /var/run/reboot-required)
 * **MS Edge**
-  * Check MS Edge is installed (file should exist /opt/microsoft/msedge/msedge)
+  * Check MS Edge is installed
+    * file should exist /opt/microsoft/msedge/msedge
   *	Check MS Edge version
 * **Kernel version**
-  *	Check Kernel version (5.19.35-generic minimum currently configured in json)
+  *	Check Kernel version
+    * 5.19.35-generic minimum currently configured in json
   *	Check Kernel patch level
   *	Check Kernel flavour
   *	Check Kernel tainted state
-*	**SecureBoot status** (require SecureBoot configured in json)
+* **SecureBoot status**
+  * require SecureBoot configured in json
 * **sysctrl values** (placeholder to check any value)
   *	user.max_user_namespaces
 * **gsettings values**  (placeholder to check any value)
@@ -43,7 +48,6 @@ Get-Content -Path .\Intune_Linux_Custom_Compliance_script_Rules_file.json | Conv
   * MicrosoftDefenderForEndpointOnLinux_Healthy
   * MicrosoftDefenderForEndpointOnLinux_DefinitionsStatus_up_to_date
   * MicrosoftDefenderForEndpointOnLinux_real_time_protection_enabled
-
 ## How script works
 Linux Compliance script itself is Bash script because POSIX-compliant shell script is requirement for Intune. However script includes Powershell script and compliance checks are done in Powershell part.
 
