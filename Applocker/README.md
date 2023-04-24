@@ -1,1 +1,1 @@
-Applocker script which read Applocker XML file and creates Intune Applocker policy
+Applocker script which reads Applocker XML file and creates Intune Applocker policy
