@@ -14,6 +14,13 @@ Quick links to reports:
 
 Link to script [Create-IntuneAppAssignmentsReport.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create-IntuneAppAssignmentsReport.ps1)
 
+**Quick start:**  
+```
+# Download from PowershellGallery and run script
+Save-Script Create-IntuneAppAssignmentsReport -Path ./
+./Create-IntuneAppAssignmentsReport.ps1
+```
+
 ### Features: ###
 
 * 2 main views usually used:
