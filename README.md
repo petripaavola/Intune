@@ -10,4 +10,5 @@ Links to sections
 ### [Microsoft_Graph_API](./Microsoft_Graph_API) ###
 ### [Powershell_Commands](./Powershell_Commands) ###
 ### [Reports](./Reports) ###
+* **Huge updates in Application Assignment Report ver3.0 (24.5.2023)**
 ### [Troubleshooting](./Troubleshooting) ###
