@@ -1,4 +1,4 @@
-# Intune HTML reports (updating page at the moment, stay tuned for updates soon! :)
+# Intune HTML reports - Check updated Intune App Assignment Report
 Reports which we don't have in Intune (at least at this time)
 
 Quick links to reports:
@@ -9,8 +9,8 @@ Quick links to reports:
   * Updated version 3.0 work in progress
 
 
-## Create-IntuneAppAssignmentsReport.ps1 ver3.0 ###
-**Huge update to this 3.0 version! (updated 24.5.2023)**
+## Create-IntuneAppAssignmentsReport.ps1 ver3.0 - Updated 24.5.2023 ###
+**Huge update to this 3.0 version!**
 
 Link to script [Create-IntuneAppAssignmentsReport.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create-IntuneAppAssignmentsReport.ps1)
 
@@ -40,7 +40,7 @@ Link to script [Create-IntuneAppAssignmentsReport.ps1](https://github.com/petrip
 
 ### Usage: ###
 
-Make sure you have Intune Powershell module installed and updated  
+Make sure you have **Intune Powershell module** installed and updated  
 You can install Intune Powershell management module to your user account with command
 ```
 Install-Module -Name Microsoft.Graph.Intune -Scope CurrentUser
