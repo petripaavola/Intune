@@ -45,7 +45,7 @@ You can install Intune Powershell management module to your user account with co
 ```
 Install-Module -Name Microsoft.Graph.Intune -Scope CurrentUser
 ```
-**Download** script from PowershellGallery with command:  
+**Download** script from [PowershellGallery](https://www.powershellgallery.com/packages/Create-IntuneAppAssignmentsReport) with command:  
 ```
 Save-Script Create-IntuneAppAssignmentsReport -Path ./
 ```
