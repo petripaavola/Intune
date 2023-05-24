@@ -36,7 +36,7 @@ Link to script [Create-IntuneAppAssignmentsReport.ps1](https://github.com/petrip
 ![IntuneApplicationAssignmentReport.png](https://github.com/petripaavola/Intune/blob/master/Reports/pics/IntuneApplicationAssignmentReport.png)
 
 ### What Apps are assigned to AzureAD Group
-![IntuneApplicationAssignmentReportSortByAssignmentGroup.pngg](https://github.com/petripaavola/Intune/blob/master/Reports/pics/IntuneApplicationAssignmentReportSortByAssignmentGroup.png)
+![IntuneApplicationAssignmentReportSortByAssignmentGroup.png](https://github.com/petripaavola/Intune/blob/master/Reports/pics/IntuneApplicationAssignmentReportSortByAssignmentGroup.png)
 
 ### Usage: ###
 
