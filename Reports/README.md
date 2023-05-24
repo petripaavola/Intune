@@ -23,6 +23,7 @@ Save-Script Create-IntuneAppAssignmentsReport -Path ./
 
 ### Features: ###
 
+* This report shows information which is not available in Intune UI without making tens or hundreds of clicks to all Apps and AzureAD Groups
 * 2 main views usually used:
   * Find AzureAD Groups where single Application is assigned to
     * Sort by **App name** column (default)
