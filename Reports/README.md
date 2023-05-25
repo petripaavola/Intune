@@ -2,15 +2,20 @@
 Reports which we don't have in Intune (at least at this time)
 
 Quick links to reports:
-* **[Create-IntuneAppAssignmentsReport.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create-IntuneAppAssignmentsReport.ps1)**
-  * **Huge update to ver3.0. Check it out!**
+* **[Intune Application Assignment Report](#IntuneAppAssignmentsReport)**
+  * **[Create-IntuneAppAssignmentsReport.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create-IntuneAppAssignmentsReport.ps1)**
+  * **Huge update to ver3.0. Check it out! (24.5.2023)**
   * <img src="./pics/IntuneApplicationAssignmentReport.png" width=33% height=33%>
-* [Create_IntuneConfigurationAssignments_HTML_Report.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create_IntuneConfigurationAssignments_HTML_Report.ps1)
-  * Updated version 3.0 work in progress
+* **[Intune Configurations Assignment Report](#IntuneConfigurationAssignmentsReport)**
+  * [Create_IntuneConfigurationAssignments_HTML_Report.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create_IntuneConfigurationAssignments_HTML_Report.ps1)
+  * Updated version to 3.0 work in progress
 
 
+<a id="IntuneAppAssignmentsReport"></a>
 ## Create-IntuneAppAssignmentsReport.ps1 ver3.0 - Updated 24.5.2023 ###
-**Huge update to this 3.0 version!**
+**Huge update to current 3.0 version! Last Intune Application Assignment Report you need :)**
+
+This PowerShell script creates an HTML report from all Intune App Assignments. This report shows information not easily available in the Intune UI.
 
 Link to script [Create-IntuneAppAssignmentsReport.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create-IntuneAppAssignmentsReport.ps1)
 
@@ -27,7 +32,7 @@ Save-Script Create-IntuneAppAssignmentsReport -Path ./
 * 2 main views usually used:
   * Find AzureAD Groups where single Application is assigned to
     * Sort by **App name** column (default)
-  * Find all Apps that are assigned to single AzureAD Group
+  * **Find all Apps that are assigned to single AzureAD Group**
     * **this view does not exist in Intune**
     * Sort by **Target Group** column
 * See **impact** of Assignment
@@ -63,59 +68,34 @@ Save-Script Create-IntuneAppAssignmentsReport -Path ./
 ```
 ### Parameters ###
 
-**-UseOfflineCache**  
-Create report using files from local cache folder.
+The script accepts the following parameters:
+
+| Parameter                        | Description                                                                                                                                                                                                                               |
+|----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `-ExportCSV`                     | Export report as a CSV file.                                                                                                                                                                                                              |
+| `-ExportJSON`                    | Export report as a JSON file.                                                                                                                                                                                                             |
+| `-ExportToExcelCopyPaste`        | Export report to Clipboard for easy pasting into Excel.                                                                                                                                                                                   |
+| `-UseOfflineCache`               | Create report using files from the cache folder.                                                                                                                                                                                          |
+| `-DoNotOpenReportAutomatically`  | Prevent automatic opening of the HTML report in a web browser. Useful for automating report creation.                                                                                                                                    |
+| `-UpdateIconsCache`              | Update the App icon cache. New Apps will always get icons downloaded automatically but existing icons are not automatically updated.                                                                                                     |
+| `-IncludeAppsWithoutAssignments` | Include Intune Applications without Assignments. This will display a lot of Apps you didn't even know exist inside Intune/Graph API.                                                                                                      |
+| `-DoNotDownloadAppIcons`         | Prevent downloading of application icons.                                                                                                                                                                                                 |
+| `-IncludeIdsInReport`            | Include application IDs in the report. This makes the report wider so it is disabled by default.                                                                                                                                         |
+| `-IncludeBase64ImagesInReport`   | Includes Application icons inside the HTML file. Note! This is slow and creates a large HTML file.                                                                                                                                        |
+### Examples ###
 ```
-./Create-IntuneAppAssignmentsReport.ps1 -UseOfflineCache
-```
-**-ExportCSV**  
-Export report as ; limited CSV file.
-```
-./Create-IntuneAppAssignmentsReport.ps1 -ExportCSV
-```
-**-ExportJSON**  
-Export report as JSON file
-```
-./Create-IntuneAppAssignmentsReport.ps1 -ExportJSON
-```
-**-ExportToExcelCopyPaste**  
-Export report to Clipboard. You can paste it to Excel and excel will paste data to columns automatically.
-```
-./Create-IntuneAppAssignmentsReport.ps1 -ExportToExcelCopyPaste
-```
-**-DoNotOpenReportAutomatically**  
-Do not automatically open HTML report to Web browser. Can be used when automating report creation.
-```
-./Create-IntuneAppAssignmentsReport.ps1 -DoNotOpenReportAutomatically
-```
-**-UpdateIconsCache**  
-Update App icon cache. New Apps will always get icons downloaded automatically but existing icons are not automatically updated
-```
-./Create-IntuneAppAssignmentsReport.ps1 -UpdateIconsCache
-```
-**-IncludeAppsWithoutAssignments**  
-Include Intune Application without Assignments. This will get a lot of Apps you didn't even know exists inside Intune/Graph API.
-```
-./Create-IntuneAppAssignmentsReport.ps1 -IncludeAppsWithoutAssignments
-```
-**-DoNotDownloadAppIcons**  
-Do not download Application icons.
-```
-./Create-IntuneAppAssignmentsReport.ps1 -DoNotDownloadAppIcons
-```
-**-IncludeIdsInReport**  
-Include Appication Ids in report. This makes wider so it is disabled by default.
-```
-./Create-IntuneAppAssignmentsReport.ps1 -IncludeIdsInReport
-```
-**-IncludeBase64ImagesInReport**  
-Includes Application icons inside HTML file so report will have icons if HTML if copied somewhere else. Note! This is slow and creates huge HTML file.
-```
-./Create-IntuneAppAssignmentsReport.ps1 -IncludeBase64ImagesInReport
+.\Create-IntuneAppAssignmentsReport.ps1
+.\Create-IntuneAppAssignmentsReport.ps1 -UseOfflineCache
+.\Create-IntuneAppAssignmentsReport.ps1 -ExportCSV -ExportJSON
+.\Create-IntuneAppAssignmentsReport.ps1 -ExportToExcelCopyPaste
+.\Create-IntuneAppAssignmentsReport.ps1 -UpdateIconsCache
+.\Create-IntuneAppAssignmentsReport.ps1 -DoNotDownloadAppIcons
+.\Create-IntuneAppAssignmentsReport.ps1 -DoNotOpenReportAutomatically
+.\Create-IntuneAppAssignmentsReport.ps1 -IncludeAppsWithoutAssignments
 ```
 
 ---
-
+<a id="IntuneConfigurationAssignmentsReport"></a>
 ## Create_IntuneConfigurationAssignments_HTML_Report.ps1
 [Create_IntuneConfigurationAssignments_HTML_Report.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create_IntuneConfigurationAssignments_HTML_Report.ps1)
 
