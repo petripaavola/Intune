@@ -1,13 +1,10 @@
 # Intune HTML reports - Check updated Intune App Assignment Report
 Reports which we don't have in Intune (at least at this time)
 
-Quick links to reports:
-* **[Intune Application Assignment Report](#IntuneAppAssignmentsReport)**
-  * **[Create-IntuneAppAssignmentsReport.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create-IntuneAppAssignmentsReport.ps1)**
+**Quick links to reports**
+* **[Intune Application Assignment Report - New version updated](#IntuneAppAssignmentsReport)**
   * **Huge update to ver3.0. Check it out! (24.5.2023)**
-  * <img src="./pics/IntuneApplicationAssignmentReport.png" width=33% height=33%>
 * **[Intune Configurations Assignment Report](#IntuneConfigurationAssignmentsReport)**
-  * [Create_IntuneConfigurationAssignments_HTML_Report.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create_IntuneConfigurationAssignments_HTML_Report.ps1)
   * Updated version to 3.0 work in progress
 
 
@@ -17,16 +14,20 @@ Quick links to reports:
 
 This PowerShell script creates an HTML report from all Intune App Assignments. This report shows information not easily available in the Intune UI.
 
+<img src="./pics/IntuneApplicationAssignmentReport.png" width=33% height=33%>  <img src="./pics/IntuneApplicationAssignmentReportSortByAssignmentGroup.png" width=33% height=33%>
+
 Link to script [Create-IntuneAppAssignmentsReport.ps1](https://github.com/petripaavola/Intune/blob/master/Reports/Create-IntuneAppAssignmentsReport.ps1)
 
-**Quick start:**  
+**Quick start**  
 ```
-# Download from PowershellGallery and run script
+# Download from PowershellGallery
 Save-Script Create-IntuneAppAssignmentsReport -Path ./
+
+# Run script (create report)
 ./Create-IntuneAppAssignmentsReport.ps1
 ```
 
-### Features: ###
+### Features ###
 
 * This report shows information which is not available in Intune UI without making tens or hundreds of clicks to all Apps and AzureAD Groups
 * 2 main views usually used:
@@ -45,13 +46,14 @@ Save-Script Create-IntuneAppAssignmentsReport -Path ./
 * **Web link** to Intune Application, Target AzureAD Group and Intune Filter
 * **Export** CSV file, json file and paste to Excel
 
-### Overview
+### Report overview ###
 ![IntuneApplicationAssignmentReport.png](https://github.com/petripaavola/Intune/blob/master/Reports/pics/IntuneApplicationAssignmentReport.png)
 
-### What Apps are assigned to AzureAD Group
+### What Apps are assigned to AzureAD Group ###
+**Intune does not have this kind of view.**
 ![IntuneApplicationAssignmentReportSortByAssignmentGroup.png](https://github.com/petripaavola/Intune/blob/master/Reports/pics/IntuneApplicationAssignmentReportSortByAssignmentGroup.png)
 
-### Usage: ###
+### Usage ###
 
 Make sure you have **Intune Powershell module** installed and updated  
 You can install Intune Powershell management module to your user account with command
