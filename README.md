@@ -6,6 +6,7 @@ Links to sections
 ### [Apps](./Apps) ###
 ### [Devices](./Devices) ###
 ### [Remediations](./Remediations) ###
+### [Device Query](./Device Query) ###
 ### [Groups](./Groups) ###
 ### [Linux](./Linux) ###
 ### [Microsoft_Graph_API](./Microsoft_Graph_API) ###
