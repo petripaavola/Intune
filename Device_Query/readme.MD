@@ -1,5 +1,6 @@
 # Intune Device Query examples
-### Registry
+## Registry
+**Get IP-address from registry**
 ```
 // Get IP-address from registry
 WindowsRegistry('HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\*')
