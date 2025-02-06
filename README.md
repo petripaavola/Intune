@@ -5,6 +5,7 @@ Links to sections
 ### [Applocker](./Applocker) - New ###
 ### [Apps](./Apps) ###
 ### [Devices](./Devices) ###
+### [Remediations](./Remediations) ###
 ### [Groups](./Groups) ###
 ### [Linux](./Linux) ###
 ### [Microsoft_Graph_API](./Microsoft_Graph_API) ###
