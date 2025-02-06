@@ -1,0 +1,30 @@
+Name: Set TimeZone to 'FLE Standard Time' only on fi-FI devices - Win32 App Remediation
+Description: Set TimeZone to 'FLE Standard Time' only on fi-FI devices - Win32 App Remediation
+Publisher: Yodamiitti Oy
+Version: 1.0
+
+Install command: Powershell.exe -Executionpolicy bypass -file Set-TimeZone-to-FLEStandardTime-Win32-Remediation-Install-script.ps1
+Uninstall command: cmd /c exit 0
+
+
+Requirements:
+
+- Requirement type: Script
+- Script Name: 01-Requirements-script-Set-TimeZone-to-FLEStandardTime-Win32-Remediation.ps1
+- Script file: 01-Requirements-script-Set-TimeZone-to-FLEStandardTime-Win32-Remediation.ps1
+- Run script as 32-bit process on 64-bit clients: No
+- Run this script using the logged on credentials: No
+- Enforce script signature check: No
+- Select output data type: Boolean
+- Operator: Equals
+- Value: Yes
+
+
+Detection check: 
+- Use custom detection script
+- 02-Detection-script-Set-TimeZone-to-FLEStandardTime-Win32-Remediation.ps1
+- Run script as 32-bit process on 64-bit clients: No
+- Enforce script signature check and run script silently: No
+
+
+
