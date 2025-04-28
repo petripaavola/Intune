@@ -12,6 +12,7 @@
 - [WindowsService Device Query](#windowsservice-device-query)
 
 ### Intune Multi Device Query examples
+- [Battery](#Battery)
 - [BiosInfo](#BiosInfo)
 - [Cpu](#Cpu)
 - [Tpm](#Tpm)
@@ -161,6 +162,21 @@ WindowsService
 ```
 
 # Intune Multi Device Query examples
+
+## Battery
+```
+// Get devices Battery CycleCount and sort CycleCount descending and show only few properties (with project)
+Battery
+| project Device, CycleCount, DesignedCapacity, FullChargedCapacity
+| order by CycleCount desc
+```
+```
+// Get devices where Battery FullChargeCapacity is lower than DesignedCapacity.
+// This tells us if Battery is not 100% anymore
+Battery
+| where FullChargedCapacity < DesignedCapacity
+| order by CycleCount desc
+```
 
 ## BiosInfo
 ```
