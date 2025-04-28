@@ -1,3 +1,20 @@
+## Table of Contents
+
+### Intune Device Query examples
+- [Event logs Device Query](#event-logs-device-query)
+- [Registry Device Query](#registry-device-query)
+- [Files Device Query](#files-device-query)
+- [Certificates Device Query](#certificates-device-query)
+- [Process Device Query](#process-device-query)
+- [EncryptableVolume Device Query](#encryptablevolume-device-query)
+- [LocalUserAccount Device Query](#localuseraccount-device-query)
+- [WindowsDriver Device Query](#windowsdriver-device-query)
+- [WindowsService Device Query](#windowsservice-device-query)
+
+### Intune Multi Device Query examples
+- [WindowsQfe](#windowsqfe)
+
+
 # Intune Device Query examples
 
 ## Event logs Device Query
