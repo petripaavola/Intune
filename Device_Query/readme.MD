@@ -130,3 +130,12 @@ LocalUserAccount
 WindowsDriver
 | where DriverDescription contains 'Microsoft'
 ```
+
+## WindowsService Device Query
+
+```
+// Get Windows services which have StartMode Automatic but current state is stopped
+WindowsService
+| where StartMode == "AUTO"
+| where State == "STOPPED"
+```
