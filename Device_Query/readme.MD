@@ -12,6 +12,8 @@
 - [WindowsService Device Query](#windowsservice-device-query)
 
 ### Intune Multi Device Query examples
+- [Cpu](#Cpu)
+- [Tpm](#Tpm)
 - [WindowsQfe](#windowsqfe)
 
 
@@ -158,6 +160,41 @@ WindowsService
 ```
 
 # Intune Multi Device Query examples
+
+## Cpu
+```
+// Get ARM64 devices using exact operator
+Cpu
+| where Architecture == "ARM64"
+```
+```
+// Get ARM devices using startswith operator
+Cpu
+| where Architecture startswith "ARM"
+```
+```
+// Get ARM devices using contains operator
+Cpu
+| where Architecture contains "ARM"
+```
+
+## Tpm
+```
+// Get devices where TPM is NOT in desired state
+Tpm
+| where Activated == false or Enabled == false or Owned == false
+```
+```
+// Get devices where TPM IS Activated
+Tpm
+| where Activated == true
+```
+```
+// Get devices where TPM is NOT Activated
+Tpm
+| where Activated == false
+```
+
 
 ## WindowsQfe
 ```
