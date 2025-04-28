@@ -12,6 +12,7 @@
 - [WindowsService Device Query](#windowsservice-device-query)
 
 ### Intune Multi Device Query examples
+- [BiosInfo](#BiosInfo)
 - [Cpu](#Cpu)
 - [Tpm](#Tpm)
 - [WindowsQfe](#windowsqfe)
@@ -160,6 +161,13 @@ WindowsService
 ```
 
 # Intune Multi Device Query examples
+
+## BiosInfo
+```
+// Get BiosInfo for HP devices where BIOS information is not the latest version (P78 Ver. 01.49)
+BiosInfo
+| where Manufacturer == "HP" and SmBiosVersion != "P78 Ver. 01.49"
+```
 
 ## Cpu
 ```
