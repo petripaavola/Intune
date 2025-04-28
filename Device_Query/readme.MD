@@ -139,3 +139,12 @@ WindowsService
 | where StartMode == "AUTO"
 | where State == "STOPPED"
 ```
+
+# Intune Multi Device Query examples
+
+## WindowsQfe
+```
+// Get 2025-04 Cumulative Update for W11 23H2 and W11 24H2
+WindowsQfe
+| where HotFixId == "KB5055528" or HotFixId == "KB5055523"
+```
