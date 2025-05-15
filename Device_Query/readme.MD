@@ -63,6 +63,14 @@ WindowsEvent('Microsoft-Windows-AppLocker/EXE and DLL',7d)
 WindowsEvent('Microsoft-Windows-AppLocker/MSI and Script',1d)
 | where Level == 'Warning'
 ```
+```
+// Get Boot times in last 40 days
+WindowsEvent('System',40d)
+| where EventId == 6005
+| order by LoggedDateTime
+| project LoggedDateTime, Message
+```
+
 
 ## Registry Device Query
 
